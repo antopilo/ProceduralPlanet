@@ -292,5 +292,3 @@ func get_color(height):
 	
 	else:
 		return color_grass.lightened(height / 50)
-
-func clear_world():
