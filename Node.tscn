@@ -1,0 +1,28 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://Node.gd" type="Script" id=1]
+
+[node name="Node" type="Node" index="0"]
+
+script = ExtResource( 1 )
+resolution1 = 512
+resolution2 = 128
+resolution3 = 64
+resolution4 = 16
+amplify = 2
+amplitude1 = 25
+amplitude2 = 10
+amplitude3 = 5
+amplitude4 = 2
+level_water = -1
+level_grass = 15
+color_deepwater = Color( 0.0840454, 0.30875, 0.597656, 1 )
+color_water = Color( 0.119629, 0.720203, 0.765625, 1 )
+color_sand = Color( 0.993835, 1, 0.210938, 1 )
+color_grass = Color( 0.266589, 0.589844, 0.0230408, 1 )
+color_deepgrass = Color( 0.126592, 0.574219, 0.0179443, 1 )
+color_rock = Color( 0.394531, 0.394531, 0.394531, 1 )
+color_deeprock = Color( 0.21875, 0.21875, 0.21875, 1 )
+color_snow = Color( 0.9375, 0.9375, 0.9375, 1 )
+
+
