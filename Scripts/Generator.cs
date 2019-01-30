@@ -1,4 +1,5 @@
 using Godot;
+using Godot.Collections;
 using System;
 using System.Collections.Generic;
 
@@ -19,7 +20,7 @@ public class Generator : Node
     private float VoxelSize = 0.25f;
 
     // Chunks
-    private List<Vector3> VoxInChunks = new List<Vector3>();
+    private Dictionary VoxInChunks = new Dictionary();
     private List<Node> LoadedChunks = new List<Node>();
 
     // Water
@@ -88,7 +89,7 @@ public class Generator : Node
             {
                 var height = Mathf.Stepify( ( Noise.GetNoise2d(cPosition.x + x, cPosition.y + z) + 1) * ChunkSize.y / 2, 1);
                 for (int y = 0; y <= height; y++)
-                    VoxInChunks.Add(new Vector3(x, y, z));
+                    VoxInChunks.Add(new Vector3(x, y, z).ToString(), new Vector3(x, y, z));
             }
         GD.Print("Chunk preloaded done : " + cPosition.ToString());
     }
@@ -107,7 +108,7 @@ public class Generator : Node
 
         PreloadChunk(cPosition);
 
-        foreach (Vector3 voxPos in VoxInChunks)
+        foreach (Vector3 voxPos in VoxInChunks.Values)
             CreateVoxel(SurfaceTool, voxPos, cPosition);
 
         var chunk = new MeshInstance();
@@ -131,6 +132,9 @@ public class Generator : Node
     {
         var VoxelPos = new Vector3(pPosition.x + cPosition.x, pPosition.y, pPosition.z + cPosition.y);
         pSurfaceTool.AddColor( new Color("66CD00").Lightened(pPosition.y / 50 ));
+
+        //if (!isVisible(pPosition.x, pPosition.y, pPosition.z))
+        //    return;
 
         if(CanCreateFace(pPosition.x, pPosition.y + 1, pPosition.z)) // Above
         {
@@ -186,11 +190,24 @@ public class Generator : Node
         }
     }
 
+    private bool isVisible(float x, float y, float z)
+    {
+        Vector3[] Sides = new Vector3[]{ new Vector3(x + 1, y, z),new Vector3(x - 1, y, z),
+                                            new Vector3(x, y + 1, z),new Vector3(x, y - 1, z),
+                                            new Vector3(x, y, z + 1),new Vector3(x, y, z - 1)};
+
+        foreach (Vector3 side in Sides)
+            if (!VoxInChunks.ContainsKey(side.ToString())) return true;
+
+        return false;
+    }
+
+
     // Check if there is a voxel at X Y Z position in the current preloaded chunk.
     private bool CanCreateFace(float x, float y, float z)
     {
         //GD.Print(x + "-" + y + "-" + z);
-        return !( VoxInChunks.Contains( new Vector3(x,y,z) ) || 
-            ( (x % (ChunkSize.x ) == 0 || z % (ChunkSize.z) == 0 || x < 0 || z < 0 ) && VoxInChunks.Contains(new Vector3(x, y + 1, z)) ));
+        return !(VoxInChunks.ContainsKey(new Vector3(x,y,z).ToString())) || 
+            ( (x % (ChunkSize.x ) == 0 || z % (ChunkSize.z) == 0 || x < 0 || z < 0 ) && VoxInChunks.ContainsKey(new Vector3(x, y + 1, z).ToString()) );
     }
 }
