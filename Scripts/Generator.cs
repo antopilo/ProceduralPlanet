@@ -15,8 +15,8 @@ public class Generator : Node
     private SpatialMaterial WaterMaterial;
 
     private Vector3 ChunkSize = new Vector3(16, 128, 16);
-    private int RenderDistance = 16;
-    private float VoxelSize = 0.5f;
+    private int RenderDistance = 2;
+    private float VoxelSize = 0.25f;
 
     // Chunks
     private List<Vector3> VoxInChunks = new List<Vector3>();
@@ -27,7 +27,7 @@ public class Generator : Node
     private PlaneMesh WaterMesh;
 
     private float WaterOffset = 0.5f;
-    private int WaterLevel = 20;
+    private int WaterLevel = 60;
 
     private Vector3[] Vertices = { new Vector3(0, 0, 0),
                                    new Vector3(1, 0, 0),
@@ -42,8 +42,8 @@ public class Generator : Node
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
-        VoxMaterial = ResourceLoader.Load("res://Materials/Voxel.tres") as SpatialMaterial;
-        WaterMaterial = ResourceLoader.Load("res://Materials/Water.tres") as SpatialMaterial;
+        VoxMaterial = ResourceLoader.Load("res://material/Grass.tres") as SpatialMaterial;
+        WaterMaterial = ResourceLoader.Load("res://material/water.tres") as SpatialMaterial;
 
         GenerateSeed();
 
@@ -71,8 +71,8 @@ public class Generator : Node
         
         Noise.Seed = CurrentSeed;
         Noise.Octaves = 4;
-        Noise.Period = 10f;
-        Noise.Persistence = 0.8f;
+        Noise.Period = 25f;
+        Noise.Persistence = 0.5f;
     }
 
     /// <summary>
@@ -82,15 +82,13 @@ public class Generator : Node
     /// <param name="cPosition">Chunk position.</param>
     private void PreloadChunk(Vector2 cPosition)
     {
+        GD.Print("Started preloading chunk : " + cPosition.ToString());
         for (int x = 0; x < ChunkSize.x; x++)
             for (int z = 0; z < ChunkSize.z; z++)
             {
-                var height = Mathf.Stepify( ( Noise.GetNoise2d(cPosition.x + x, cPosition.y + z) + 1) * 32, 1);
-                 VoxInChunks.Add(new Vector3(x, height, z));
-                //for (int y = 0; y <= height; y++)
-                //{
-                //    VoxInChunks.Add(new Vector3(x, y, z));
-                //}
+                var height = Mathf.Stepify( ( Noise.GetNoise2d(cPosition.x + x, cPosition.y + z) + 1) * ChunkSize.y / 2, 1);
+                for (int y = 0; y <= height; y++)
+                    VoxInChunks.Add(new Vector3(x, y, z));
             }
         GD.Print("Chunk preloaded done : " + cPosition.ToString());
     }
@@ -101,6 +99,7 @@ public class Generator : Node
     /// <param name="cPosition">Global Position.</param>
     private void LoadChunk(Vector2 pPosition)
     {
+        GD.Print("Started loading chunk : " + pPosition.ToString());
         var cPosition = new Vector2(Mathf.Floor(pPosition.x) * ChunkSize.x, Mathf.Floor(pPosition.y) * ChunkSize.z);
         SurfaceTool = new SurfaceTool();
         SurfaceTool.Begin(Mesh.PrimitiveType.Triangles);
@@ -114,16 +113,20 @@ public class Generator : Node
         var chunk = new MeshInstance();
         chunk.Mesh = SurfaceTool.Commit();
         chunk.Name = cPosition.ToString();
-        //chunk.CreateTrimeshCollision();
+        //chunk.CreateTrimeshCollision(); // Collisions generation.
         chunk.AddToGroup("Chunk");
         AddChild(chunk);
 
-        LoadedChunks.Add(chunk);
+        LoadedChunks.Add(chunk); // Keeping track of generated chunks.
 
         SurfaceTool.Clear();
         VoxInChunks.Clear();
+        GD.Print("loading chunk done : " + pPosition.ToString());
     }
 
+
+    // Create each faces of a single voxel at pPositon in cPosition chunk.
+    // TODO: Remove Surfacetool parameter.
     private void CreateVoxel(SurfaceTool pSurfaceTool, Vector3 pPosition, Vector2 cPosition)
     {
         var VoxelPos = new Vector3(pPosition.x + cPosition.x, pPosition.y, pPosition.z + cPosition.y);
@@ -183,8 +186,11 @@ public class Generator : Node
         }
     }
 
+    // Check if there is a voxel at X Y Z position in the current preloaded chunk.
     private bool CanCreateFace(float x, float y, float z)
     {
-        return !VoxInChunks.Contains(new Vector3(x,y,z));
+        //GD.Print(x + "-" + y + "-" + z);
+        return !( VoxInChunks.Contains( new Vector3(x,y,z) ) || 
+            ( (x % (ChunkSize.x ) == 0 || z % (ChunkSize.z) == 0 || x < 0 || z < 0 ) && VoxInChunks.Contains(new Vector3(x, y + 1, z)) ));
     }
 }

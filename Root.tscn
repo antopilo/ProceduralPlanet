@@ -9,17 +9,17 @@
 script = ExtResource( 1 )
 
 [node name="Camera" type="Camera" parent="."]
-transform = Transform( -0.0104938, -0.707068, 0.707068, 0, 0.707107, 0.707107, -0.999945, 0.00742021, -0.00742022, 22.8485, 34.3015, 22.5086 )
+transform = Transform( 0.0718244, -0.705281, 0.705281, 0, 0.707107, 0.707107, -0.997417, -0.0507875, 0.0507875, 22.8485, 34.3015, 22.5086 )
 current = true
 fov = 75.3
 size = 49.1095
 far = 500.0
 script = ExtResource( 2 )
-privot = NodePath("")
 collisions = false
 max_speed = Vector3( 15, 15, 15 )
 
 [node name="Sun" type="DirectionalLight" parent="."]
+transform = Transform( 0.0672027, 0.670175, -0.739154, -0.197632, 0.735091, 0.648523, 0.97797, 0.102498, 0.181848, 0, 0, 0 )
 light_color = Color( 1, 0.976471, 0.811765, 1 )
 shadow_enabled = true
 
