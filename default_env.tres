@@ -7,4 +7,24 @@
 
 background_mode = 2
 background_sky = SubResource( 1 )
+ambient_light_color = Color( 1, 1, 1, 1 )
+fog_enabled = true
+ss_reflections_enabled = true
+ssao_enabled = true
+ssao_radius = 2.5
+ssao_intensity = 4.0
+ssao_intensity2 = 22.3
+ssao_bias = 0.248
+ssao_light_affect = 0.18
+ssao_ao_channel_affect = 0.11
+ssao_quality = 1
+ssao_edge_sharpness = 32.0
+dof_blur_far_enabled = true
+dof_blur_far_distance = 43.01
+dof_blur_far_transition = 150.42
+dof_blur_far_quality = 2
+glow_intensity = 1.09
+glow_blend_mode = 0
+adjustment_enabled = true
+adjustment_saturation = 1.19
 
