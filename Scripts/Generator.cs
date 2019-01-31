@@ -17,7 +17,7 @@ public class Generator : Node
     private SpatialMaterial WaterMaterial;
 
     private Vector3 ChunkSize = new Vector3(16, 128, 16);
-    private int RenderDistance = 4;
+    [Export] private int RenderDistance = 4;
     private float VoxelSize = 1f;
 
     // Chunks
@@ -113,7 +113,7 @@ public class Generator : Node
         var cPosition = new Vector2(Mathf.Floor(pPosition.x) * ChunkSize.x, Mathf.Floor(pPosition.y) * ChunkSize.z);
         SurfaceTool = new SurfaceTool();
         SurfaceTool.Begin(Mesh.PrimitiveType.Triangles);
-        
+        SurfaceTool.SetMaterial(VoxMaterial);
         PreloadChunk(cPosition);
 
         foreach (Vector3 voxPos in VoxInChunks.Values)

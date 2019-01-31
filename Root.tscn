@@ -7,6 +7,7 @@
 
 [node name="Generator" type="Node" parent="."]
 script = ExtResource( 1 )
+RenderDistance = 8
 
 [node name="Camera" type="Camera" parent="."]
 transform = Transform( 0.0718244, -0.705281, 0.705281, 0, 0.707107, 0.707107, -0.997417, -0.0507875, 0.0507875, 22.8485, 34.3015, 22.5086 )
