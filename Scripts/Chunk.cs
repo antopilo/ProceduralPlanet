@@ -28,7 +28,7 @@ public class Chunk
 
                 for (int y = 0; y < ChunkSize.y; y += 1)
                 {
-                    if (pNoise.GetNoise3dv(pos + new Vector3((Offset.x * ChunkSize.x),0,(Offset.y * ChunkSize.z))) - ((y / ChunkSize.y) / 2) >= 0)
+                    if (pNoise.GetNoise3dv(pos + new Vector3((Offset.x * ChunkSize.x),0,(Offset.y * ChunkSize.z))) - ((y / ChunkSize.y) / 4) >= 0)
                     {
                         height += 1;
                         var val = new Vector3(x , height, z);

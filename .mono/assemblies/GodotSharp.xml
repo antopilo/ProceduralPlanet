@@ -5765,8 +5765,8 @@
         <member name="T:Godot.ARVRAnchor">
             <summary>
             The ARVR Anchor point is a spatial node that maps a real world location identified by the AR platform to a position within the game world. For example, as long as plane detection in ARKit is on, ARKit will identify and update the position of planes (tables, floors, etc) and create anchors for them.
-            This node is mapped to one of the anchors through its unique id. When you receive a signal that a new anchor is available you should add this node to your scene for that anchor. You can predefine nodes and set the id and the nodes will simply remain on 0,0,0 until a plane is recognised.
-            Keep in mind that as long as plane detection is enable the size, placing and orientation of an anchor will be updates as the detection logic learns more about the real world out there especially if only part of the surface is in view.
+            This node is mapped to one of the anchors through its unique id. When you receive a signal that a new anchor is available, you should add this node to your scene for that anchor. You can predefine nodes and set the id and the nodes will simply remain on 0,0,0 until a plane is recognised.
+            Keep in mind that, as long as plane detection is enabled, the size, placing and orientation of an anchor will be updated as the detection logic learns more about the real world out there especially if only part of the surface is in view.
             </summary>
         </member>
         <member name="P:Godot.ARVRAnchor.AnchorId">
@@ -5791,19 +5791,19 @@
         </member>
         <member name="M:Godot.ARVRAnchor.GetPlane">
             <summary>
-            Returns a plane aligned with our anchor, handy for intersection testing
+            Returns a plane aligned with our anchor; handy for intersection testing.
             </summary>
         </member>
         <member name="T:Godot.ARVRCamera">
             <summary>
-            This is a helper spatial node for our camera, note that if stereoscopic rendering is applicable (VR-HMD) most of the camera properties are ignored as the HMD information overrides them. The only properties that can be trusted are the near and far planes.
-            The position and orientation of this node is automatically updated by the ARVR Server to represent the location of the HMD if such tracking is available and can thus be used by game logic. Note that in contrast to the ARVR Controller the render thread has access to the most up to date tracking data of the HMD and the location of the ARVRCamera can lag a few milliseconds behind what is used for rendering as a result.
+            This is a helper spatial node for our camera; note that, if stereoscopic rendering is applicable (VR-HMD), most of the camera properties are ignored, as the HMD information overrides them. The only properties that can be trusted are the near and far planes.
+            The position and orientation of this node is automatically updated by the ARVR Server to represent the location of the HMD if such tracking is available and can thus be used by game logic. Note that, in contrast to the ARVR Controller, the render thread has access to the most up-to-date tracking data of the HMD and the location of the ARVRCamera can lag a few milliseconds behind what is used for rendering as a result.
             </summary>
         </member>
         <member name="T:Godot.ARVRController">
             <summary>
-            This is a helper spatial node that is linked to the tracking of controllers. It also offers several handy pass throughs to the state of buttons and such on the controllers.
-            Controllers are linked by their id. You can create controller nodes before the controllers are available. Say your game always uses two controllers (one for each hand) you can predefine the controllers with id 1 and 2 and they will become active as soon as the controllers are identified. If you expect additional controllers to be used you should react to the signals and add ARVRController nodes to your scene.
+            This is a helper spatial node that is linked to the tracking of controllers. It also offers several handy passthroughs to the state of buttons and such on the controllers.
+            Controllers are linked by their id. You can create controller nodes before the controllers are available. Say your game always uses two controllers (one for each hand) you can predefine the controllers with id 1 and 2 and they will become active as soon as the controllers are identified. If you expect additional controllers to be used, you should react to the signals and add ARVRController nodes to your scene.
             The position of the controller node is automatically updated by the ARVR Server. This makes this node ideal to add child nodes to visualise the controller.
             </summary>
         </member>
@@ -5811,7 +5811,7 @@
             <summary>
             The controller's id.
             A controller id of 0 is unbound and will always result in an inactive node. Controller id 1 is reserved for the first controller that identifies itself as the left hand controller and id 2 is reserved for the first controller that identifies itself as the right hand controller.
-            For any other controller that the [ARVRServer] detects we continue with controller id 3.
+            For any other controller that the [ARVRServer] detects, we continue with controller id 3.
             When a controller is turned off, its slot is freed. This ensures controllers will keep the same id even when controllers with lower ids are turned off.
             </summary>
         </member>
@@ -5984,7 +5984,7 @@
             <summary>
             This is a special node within the AR/VR system that maps the physical location of the center of our tracking space to the virtual location within our game world.
             There should be only one of these nodes in your scene and you must have one. All the ARVRCamera, ARVRController and ARVRAnchor nodes should be direct children of this node for spatial tracking to work correctly.
-            It is the position of this node that you update when you're character needs to move through your game world while we're not moving in the real world. Movement in the real world is always in relation to this origin point.
+            It is the position of this node that you update when your character needs to move through your game world while we're not moving in the real world. Movement in the real world is always in relation to this origin point.
             So say that your character is driving a car, the ARVROrigin node should be a child node of this car. If you implement a teleport system to move your character, you change the position of this node. Etc.
             </summary>
         </member>
@@ -6147,7 +6147,7 @@
         </member>
         <member name="M:Godot.ARVRServer.GetInterfaceCount">
             <summary>
-            Get the number of interfaces currently registered with the AR/VR server. If you're game supports multiple AR/VR platforms you can look through the available interface and either present the user with a selection or simply try an initialize each interface and use the first one that returns true.
+            Get the number of interfaces currently registered with the AR/VR server. If your game supports multiple AR/VR platforms, you can look through the available interface, and either present the user with a selection or simply try an initialize each interface and use the first one that returns true.
             </summary>
         </member>
         <member name="M:Godot.ARVRServer.GetInterface(System.Int32)">
@@ -9902,17 +9902,17 @@
         </member>
         <member name="F:Godot.Control.MouseFilterEnum.Stop">
             <summary>
-            The control will receive mouse button input events through [method _gui_input] if clicked on. These events are automatically marked as handled and they will not propagate further to other controls.
+            The control will receive mouse button input events through [method _gui_input] if clicked on. And the control will receive the [signal mouse_entered] and [signal mouse_exited] signals. These events are automatically marked as handled and they will not propagate further to other controls. This also results in blocking signals in other controls.
             </summary>
         </member>
         <member name="F:Godot.Control.MouseFilterEnum.Pass">
             <summary>
-            The control will receive mouse button input events through [method _gui_input] if clicked on. If this control does not handle the event, the parent control (if any) will be considered for a mouse click, and so on until there is no more parent control to potentially handle it. Even if no control handled it at all, the event will still be handled automatically, so unhandled input will not be fired.
+            The control will receive mouse button input events through [method _gui_input] if clicked on. And the control will receive the [signal mouse_entered] and [signal mouse_exited] signals. If this control does not handle the event, the parent control (if any) will be considered, and so on until there is no more parent control to potentially handle it. This also allows signals to fire in other controls. Even if no control handled it at all, the event will still be handled automatically, so unhandled input will not be fired.
             </summary>
         </member>
         <member name="F:Godot.Control.MouseFilterEnum.Ignore">
             <summary>
-            The control will not receive mouse button input events through [method _gui_input] and will not block other controls from receiving these events. These events will also not be handled automatically.
+            The control will not receive mouse button input events through [method _gui_input]. Also the control will not receive the [signal mouse_entered] nor [signal mouse_exited] signals. This will not block other controls from receiving these events or firing the signals. Ignored events will not be handled automatically.
             </summary>
         </member>
         <member name="F:Godot.Control.CursorShape.Arrow">
@@ -10258,7 +10258,7 @@
         </member>
         <member name="P:Godot.Control.MouseFilter">
             <summary>
-            Controls whether the control will be able to receive mouse button input events through [method _gui_input] and how these events should be handled. See the constants to learn what each does.
+            Controls whether the control will be able to receive mouse button input events through [method _gui_input] and how these events should be handled. Also controls whether the control can receive the [signal mouse_entered], and [signal mouse_exited] signals. See the constants to learn what each does.
             </summary>
         </member>
         <member name="P:Godot.Control.MouseDefaultCursorShape">
@@ -12009,7 +12009,7 @@
         </member>
         <member name="P:Godot.Curve3D.UpVectorEnabled">
             <summary>
-            If [code]true[/code], the curve will bake up vectors used for orientation. See [OrientedPathFollow]. Changing it forces the cache to be recomputed.
+            If [code]true[/code], the curve will bake up vectors used for orientation. This is used when a [member PathFollow.rotation_mode] is set to [code]ROTATION_ORIENTED[/code], see [PathFollow] for details. Changing it forces the cache to be recomputed.
             </summary>
         </member>
         <member name="M:Godot.Curve3D.GetPointCount">
@@ -12038,7 +12038,7 @@
         <member name="M:Godot.Curve3D.SetPointTilt(System.Int32,System.Single)">
             <summary>
             Sets the tilt angle in radians for the point [code]idx[/code]. If the index is out of bounds, the function sends an error to the console.
-            The tilt controls the rotation along the look-at axis an object traveling the path would have. In the case of a curve controlling a [PathFollow] or [OrientedPathFollow], this tilt is an offset over the natural tilt the [PathFollow] or [OrientedPathFollow] calculates.
+            The tilt controls the rotation along the look-at axis an object traveling the path would have. In the case of a curve controlling a [PathFollow], this tilt is an offset over the natural tilt the [PathFollow] calculates.
             </summary>
         </member>
         <member name="M:Godot.Curve3D.GetPointTilt(System.Int32)">
@@ -17723,7 +17723,7 @@
         <member name="M:Godot.KinematicBody.MoveAndSlide(Godot.Vector3,System.Nullable{Godot.Vector3},System.Boolean,System.Int32,System.Single,System.Boolean)">
             <summary>
             Moves the body along a vector. If the body collides with another, it will slide along the other body rather than stop immediately. If the other body is a [code]KinematicBody[/code] or [RigidBody], it will also be affected by the motion of the other body. You can use this to make moving or rotating platforms, or to make nodes push other nodes.
-            [code]linear_velocity[/code] is a value in pixels per second. Unlike in for example [method move_and_collide], you should [i]not[/i] multiply it by [code]delta[/code] — this is done by the method.
+            [code]linear_velocity[/code] is the velocity vector (typically meters per second). Unlike in [method move_and_collide], you should [i]not[/i] multiply it by [code]delta[/code] — the physics engine handles applying the velocity.
             [code]floor_normal[/code] is the up direction, used to determine what is a wall and what is a floor or a ceiling. If set to the default value of [code]Vector3(0, 0, 0)[/code], everything is considered a wall. This is useful for topdown games.
             [i]TODO: Update for new stop_on_slode argument.[/i] If the body is standing on a slope and the horizontal speed (relative to the floor's speed) goes below [code]slope_stop_min_velocity[/code], the body will stop completely. This prevents the body from sliding down slopes when you include gravity in [code]linear_velocity[/code]. When set to lower values, the body will not be able to stand still on steep slopes.
             If the body collides, it will change direction a maximum of [code]max_slides[/code] times before it stops.
@@ -17799,12 +17799,12 @@
         <member name="M:Godot.KinematicBody2D.MoveAndSlide(Godot.Vector2,System.Nullable{Godot.Vector2},System.Boolean,System.Int32,System.Single,System.Boolean)">
             <summary>
             Moves the body along a vector. If the body collides with another, it will slide along the other body rather than stop immediately. If the other body is a [code]KinematicBody2D[/code] or [RigidBody2D], it will also be affected by the motion of the other body. You can use this to make moving or rotating platforms, or to make nodes push other nodes.
-            [code]linear_velocity[/code] is a value in pixels per second. Unlike in for example [method move_and_collide], you should [i]not[/i] multiply it by [code]delta[/code] — this is done by the method.
+            [code]linear_velocity[/code] is the velocity vector in pixels per second. Unlike in [method move_and_collide], you should [i]not[/i] multiply it by [code]delta[/code] — the physics engine handles applying the velocity.
             [code]floor_normal[/code] is the up direction, used to determine what is a wall and what is a floor or a ceiling. If set to the default value of [code]Vector2(0, 0)[/code], everything is considered a wall. This is useful for topdown games.
             [i]TODO: Update for stop_on_slope argument.[/i] If the body is standing on a slope and the horizontal speed (relative to the floor's speed) goes below [code]slope_stop_min_velocity[/code], the body will stop completely. This prevents the body from sliding down slopes when you include gravity in [code]linear_velocity[/code]. When set to lower values, the body will not be able to stand still on steep slopes.
             If the body collides, it will change direction a maximum of [code]max_slides[/code] times before it stops.
             [code]floor_max_angle[/code] is the maximum angle (in radians) where a slope is still considered a floor (or a ceiling), rather than a wall. The default value equals 45 degrees.
-            Returns the movement that remained when the body stopped. To get more detailed information about collisions that occurred, use [method get_slide_collision].
+            Returns the [code]linear_velocity[/code] vector, rotated and/or scaled if a slide collision occurred. To get more detailed information about collisions that occurred, use [method get_slide_collision].
             &lt;param name="floorNormal"&gt;If the param is null, then the default value is new Vector2(0, 0)&lt;/param&gt;
             </summary>
         </member>
@@ -20855,44 +20855,6 @@
             Return the [PopupMenu] contained in this button.
             </summary>
         </member>
-        <member name="T:Godot.OrientedPathFollow">
-            <summary>
-            This node behaves like [PathFollow], except it uses its parent [Path] up vector information to enforce orientation.
-            Make sure to check if the curve of this node's parent [Path] has up vectors enabled. See [PathFollow] and [Curve3D] for further information.
-            </summary>
-        </member>
-        <member name="P:Godot.OrientedPathFollow.Offset">
-            <summary>
-            The distance from the first vertex, measured in 3D units along the path. This sets this node's position to a point within the path.
-            </summary>
-        </member>
-        <member name="P:Godot.OrientedPathFollow.UnitOffset">
-            <summary>
-            The distance from the first vertex, considering 0.0 as the first vertex and 1.0 as the last. This is just another way of expressing the offset within the path, as the offset supplied is multiplied internally by the path's length.
-            </summary>
-        </member>
-        <member name="P:Godot.OrientedPathFollow.HOffset">
-            <summary>
-            The node's offset along the curve.
-            </summary>
-        </member>
-        <member name="P:Godot.OrientedPathFollow.VOffset">
-            <summary>
-            The node's offset perpendicular to the curve.
-            </summary>
-        </member>
-        <member name="P:Godot.OrientedPathFollow.CubicInterp">
-            <summary>
-            If [code]true[/code], the position between two cached points is interpolated cubically, and linearly otherwise.
-            The points along the [Curve3D] of the [Path] are precomputed before use, for faster calculations. The point at the requested offset is then calculated interpolating between two adjacent cached points. This may present a problem if the curve makes sharp turns, as the cached points may not follow the curve closely enough.
-            There are two answers to this problem: Either increase the number of cached points and increase memory consumption, or make a cubic interpolation between two points at the cost of (slightly) slower calculations.
-            </summary>
-        </member>
-        <member name="P:Godot.OrientedPathFollow.Loop">
-            <summary>
-            If [code]true[/code], any offset outside the path's length will wrap around, instead of stopping at the ends. Use it for cyclic paths.
-            </summary>
-        </member>
         <member name="T:Godot.OS">
             <summary>
             Operating System functions. OS Wraps the most common functionality to communicate with the host Operating System, such as: mouse grabbing, mouse cursors, clipboard, video mode, date and time, timers, environment variables, execution of binaries, command line, etc.
@@ -22092,10 +22054,12 @@
         </member>
         <member name="P:Godot.Particles2D.FixedFps">
             <summary>
+            The particle system's frame rate is fixed to a value. For instance, changing the value to 2 will make the particles render at 2 frames per second. Note this does not slow down the particle system itself.
             </summary>
         </member>
         <member name="P:Godot.Particles2D.FractDelta">
             <summary>
+            If [code]true[/code], results in fractional delta calculation which has a smoother particles display effect. Default value: [code]true[/code]
             </summary>
         </member>
         <member name="P:Godot.Particles2D.VisibilityRect">
@@ -22125,14 +22089,17 @@
         </member>
         <member name="P:Godot.Particles2D.NormalMap">
             <summary>
+            Normal map to be used for the [code]texture[/code] property.
             </summary>
         </member>
         <member name="M:Godot.Particles2D.CaptureRect">
             <summary>
+            Returns a rectangle containing the positions of all existing particles.
             </summary>
         </member>
         <member name="M:Godot.Particles2D.Restart">
             <summary>
+            Restarts all the existing particles.
             </summary>
         </member>
         <member name="T:Godot.ParticlesMaterial">
@@ -22556,6 +22523,11 @@
         <member name="F:Godot.PathFollow.RotationModeEnum.Xyz">
             <summary>
             Allows the PathFollow to rotate in any axis.
+            </summary>
+        </member>
+        <member name="F:Godot.PathFollow.RotationModeEnum.Oriented">
+            <summary>
+            Uses the up vector information in a [Curve3D] to enforce orientation. This rotation mode requires the [Path]'s [member Curve3D.up_vector_enabled] property to be set to [code]true[/code].
             </summary>
         </member>
         <member name="P:Godot.PathFollow.Offset">
@@ -23718,11 +23690,6 @@
         <member name="M:Godot.Physics2DServer.BodySetShapeDisabled(Godot.RID,System.Int32,System.Boolean)">
             <summary>
             Disables shape in body if [code]disable[/code] is [code]true[/code].
-            </summary>
-        </member>
-        <member name="M:Godot.Physics2DServer.BodySetShapeAsOneWayCollision(Godot.RID,System.Int32,System.Boolean)">
-            <summary>
-            Enables one way collision on body if [code]enable[/code] is [code]true[/code].
             </summary>
         </member>
         <member name="M:Godot.Physics2DServer.BodyAttachObjectInstanceId(Godot.RID,System.Int32)">
@@ -25674,28 +25641,9 @@
             A Polygon2D is defined by a set of points. Each point is connected to the next, with the final point being connected to the first, resulting in a closed polygon. Polygon2Ds can be filled with color (solid or gradient) or filled with a given texture.
             </summary>
         </member>
-        <member name="P:Godot.Polygon2D.Polygon">
-            <summary>
-            The polygon's list of vertices. The final point will be connected to the first.
-            </summary>
-        </member>
-        <member name="P:Godot.Polygon2D.Uv">
-            <summary>
-            Texture coordinates for each vertex of the polygon. There should be one [code]uv[/code] per polygon vertex. If there are fewer, undefined vertices will use [code](0, 0)[/code].
-            </summary>
-        </member>
-        <member name="P:Godot.Polygon2D.Splits">
-            <summary>
-            </summary>
-        </member>
         <member name="P:Godot.Polygon2D.Color">
             <summary>
             The polygon's fill color. If [code]texture[/code] is defined, it will be multiplied by this color. It will also be the default color for vertices not set in [code]vertex_colors[/code].
-            </summary>
-        </member>
-        <member name="P:Godot.Polygon2D.VertexColors">
-            <summary>
-            Color for each vertex. Colors are interpolated between vertices, resulting in smooth gradients. There should be one per polygon vertex. If there are fewer, undefined vertices will use [code]color[/code].
             </summary>
         </member>
         <member name="P:Godot.Polygon2D.Offset">
@@ -25747,7 +25695,30 @@
             Added padding applied to the bounding box when using [code]invert[/code]. Setting this value too small may result in a "Bad Polygon" error. Default value: [code]100[/code].
             </summary>
         </member>
+        <member name="P:Godot.Polygon2D.Polygon">
+            <summary>
+            The polygon's list of vertices. The final point will be connected to the first.
+            </summary>
+        </member>
+        <member name="P:Godot.Polygon2D.Uv">
+            <summary>
+            Texture coordinates for each vertex of the polygon. There should be one [code]uv[/code] per polygon vertex. If there are fewer, undefined vertices will use [code](0, 0)[/code].
+            </summary>
+        </member>
+        <member name="P:Godot.Polygon2D.VertexColors">
+            <summary>
+            Color for each vertex. Colors are interpolated between vertices, resulting in smooth gradients. There should be one per polygon vertex. If there are fewer, undefined vertices will use [code]color[/code].
+            </summary>
+        </member>
+        <member name="P:Godot.Polygon2D.Polygons">
+            <summary>
+            </summary>
+        </member>
         <member name="P:Godot.Polygon2D.Bones">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Godot.Polygon2D.InternalVertexCount">
             <summary>
             </summary>
         </member>
@@ -31504,10 +31475,6 @@
             Requires that each vertex have UVs and normals set already.
             </summary>
         </member>
-        <member name="M:Godot.SurfaceTool.AddToFormat(System.Int32)">
-            <summary>
-            </summary>
-        </member>
         <member name="M:Godot.SurfaceTool.SetMaterial(Godot.Material)">
             <summary>
             Sets [Material] to be used by the [Mesh] you are constructing.
@@ -33006,7 +32973,7 @@
         </member>
         <member name="M:Godot.TileMap.WorldToMap(Godot.Vector2)">
             <summary>
-            Returns the tilemap (grid-based) coordinatescorresponding to the given global position.
+            Returns the tilemap (grid-based) coordinates corresponding to the given local position.
             </summary>
         </member>
         <member name="M:Godot.TileMap.UpdateDirtyQuadrants">
@@ -34983,6 +34950,14 @@
         <member name="M:Godot.VideoPlayer.GetVideoTexture">
             <summary>
             Returns the current frame as a [Texture].
+            </summary>
+        </member>
+        <member name="M:Godot.VideoStreamGDNative.SetFile(System.String)">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:Godot.VideoStreamGDNative.GetFile">
+            <summary>
             </summary>
         </member>
         <member name="M:Godot.VideoStreamTheora.SetFile(System.String)">
