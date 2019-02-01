@@ -2,7 +2,11 @@
 
 [resource]
 
+<<<<<<< HEAD
 albedo_color = Color( 0.454902, 0.976471, 0.239216, 1 )
+=======
+albedo_color = Color( 0.678431, 1, 0.294118, 1 )
+>>>>>>> 7139ef2323dffedcedf07472c8e695d032420a99
 clearcoat_enabled = true
 clearcoat = 1.0
 clearcoat_gloss = 0.56
