@@ -6147,7 +6147,7 @@
         </member>
         <member name="M:Godot.ARVRServer.GetInterfaceCount">
             <summary>
-            Get the number of interfaces currently registered with the AR/VR server. If your game supports multiple AR/VR platforms, you can look through the available interface, and either present the user with a selection or simply try an initialize each interface and use the first one that returns true.
+            Get the number of interfaces currently registered with the AR/VR server. If you're game supports multiple AR/VR platforms you can look through the available interface and either present the user with a selection or simply try an initialize each interface and use the first one that returns true.
             </summary>
         </member>
         <member name="M:Godot.ARVRServer.GetInterface(System.Int32)">
@@ -9902,17 +9902,17 @@
         </member>
         <member name="F:Godot.Control.MouseFilterEnum.Stop">
             <summary>
-            The control will receive mouse button input events through [method _gui_input] if clicked on. And the control will receive the [signal mouse_entered] and [signal mouse_exited] signals. These events are automatically marked as handled and they will not propagate further to other controls. This also results in blocking signals in other controls.
+            The control will receive mouse button input events through [method _gui_input] if clicked on. These events are automatically marked as handled and they will not propagate further to other controls.
             </summary>
         </member>
         <member name="F:Godot.Control.MouseFilterEnum.Pass">
             <summary>
-            The control will receive mouse button input events through [method _gui_input] if clicked on. And the control will receive the [signal mouse_entered] and [signal mouse_exited] signals. If this control does not handle the event, the parent control (if any) will be considered, and so on until there is no more parent control to potentially handle it. This also allows signals to fire in other controls. Even if no control handled it at all, the event will still be handled automatically, so unhandled input will not be fired.
+            The control will receive mouse button input events through [method _gui_input] if clicked on. If this control does not handle the event, the parent control (if any) will be considered for a mouse click, and so on until there is no more parent control to potentially handle it. Even if no control handled it at all, the event will still be handled automatically, so unhandled input will not be fired.
             </summary>
         </member>
         <member name="F:Godot.Control.MouseFilterEnum.Ignore">
             <summary>
-            The control will not receive mouse button input events through [method _gui_input]. Also the control will not receive the [signal mouse_entered] nor [signal mouse_exited] signals. This will not block other controls from receiving these events or firing the signals. Ignored events will not be handled automatically.
+            The control will not receive mouse button input events through [method _gui_input] and will not block other controls from receiving these events. These events will also not be handled automatically.
             </summary>
         </member>
         <member name="F:Godot.Control.CursorShape.Arrow">
@@ -10258,7 +10258,7 @@
         </member>
         <member name="P:Godot.Control.MouseFilter">
             <summary>
-            Controls whether the control will be able to receive mouse button input events through [method _gui_input] and how these events should be handled. Also controls whether the control can receive the [signal mouse_entered], and [signal mouse_exited] signals. See the constants to learn what each does.
+            Controls whether the control will be able to receive mouse button input events through [method _gui_input] and how these events should be handled. See the constants to learn what each does.
             </summary>
         </member>
         <member name="P:Godot.Control.MouseDefaultCursorShape">
@@ -17723,7 +17723,7 @@
         <member name="M:Godot.KinematicBody.MoveAndSlide(Godot.Vector3,System.Nullable{Godot.Vector3},System.Boolean,System.Int32,System.Single,System.Boolean)">
             <summary>
             Moves the body along a vector. If the body collides with another, it will slide along the other body rather than stop immediately. If the other body is a [code]KinematicBody[/code] or [RigidBody], it will also be affected by the motion of the other body. You can use this to make moving or rotating platforms, or to make nodes push other nodes.
-            [code]linear_velocity[/code] is the velocity vector (typically meters per second). Unlike in [method move_and_collide], you should [i]not[/i] multiply it by [code]delta[/code] — the physics engine handles applying the velocity.
+            [code]linear_velocity[/code] is a value in pixels per second. Unlike in for example [method move_and_collide], you should [i]not[/i] multiply it by [code]delta[/code] — this is done by the method.
             [code]floor_normal[/code] is the up direction, used to determine what is a wall and what is a floor or a ceiling. If set to the default value of [code]Vector3(0, 0, 0)[/code], everything is considered a wall. This is useful for topdown games.
             [i]TODO: Update for new stop_on_slode argument.[/i] If the body is standing on a slope and the horizontal speed (relative to the floor's speed) goes below [code]slope_stop_min_velocity[/code], the body will stop completely. This prevents the body from sliding down slopes when you include gravity in [code]linear_velocity[/code]. When set to lower values, the body will not be able to stand still on steep slopes.
             If the body collides, it will change direction a maximum of [code]max_slides[/code] times before it stops.
@@ -17799,7 +17799,7 @@
         <member name="M:Godot.KinematicBody2D.MoveAndSlide(Godot.Vector2,System.Nullable{Godot.Vector2},System.Boolean,System.Int32,System.Single,System.Boolean)">
             <summary>
             Moves the body along a vector. If the body collides with another, it will slide along the other body rather than stop immediately. If the other body is a [code]KinematicBody2D[/code] or [RigidBody2D], it will also be affected by the motion of the other body. You can use this to make moving or rotating platforms, or to make nodes push other nodes.
-            [code]linear_velocity[/code] is the velocity vector in pixels per second. Unlike in [method move_and_collide], you should [i]not[/i] multiply it by [code]delta[/code] — the physics engine handles applying the velocity.
+            [code]linear_velocity[/code] is a value in pixels per second. Unlike in for example [method move_and_collide], you should [i]not[/i] multiply it by [code]delta[/code] — this is done by the method.
             [code]floor_normal[/code] is the up direction, used to determine what is a wall and what is a floor or a ceiling. If set to the default value of [code]Vector2(0, 0)[/code], everything is considered a wall. This is useful for topdown games.
             [i]TODO: Update for stop_on_slope argument.[/i] If the body is standing on a slope and the horizontal speed (relative to the floor's speed) goes below [code]slope_stop_min_velocity[/code], the body will stop completely. This prevents the body from sliding down slopes when you include gravity in [code]linear_velocity[/code]. When set to lower values, the body will not be able to stand still on steep slopes.
             If the body collides, it will change direction a maximum of [code]max_slides[/code] times before it stops.
@@ -22054,12 +22054,10 @@
         </member>
         <member name="P:Godot.Particles2D.FixedFps">
             <summary>
-            The particle system's frame rate is fixed to a value. For instance, changing the value to 2 will make the particles render at 2 frames per second. Note this does not slow down the particle system itself.
             </summary>
         </member>
         <member name="P:Godot.Particles2D.FractDelta">
             <summary>
-            If [code]true[/code], results in fractional delta calculation which has a smoother particles display effect. Default value: [code]true[/code]
             </summary>
         </member>
         <member name="P:Godot.Particles2D.VisibilityRect">
@@ -22089,17 +22087,14 @@
         </member>
         <member name="P:Godot.Particles2D.NormalMap">
             <summary>
-            Normal map to be used for the [code]texture[/code] property.
             </summary>
         </member>
         <member name="M:Godot.Particles2D.CaptureRect">
             <summary>
-            Returns a rectangle containing the positions of all existing particles.
             </summary>
         </member>
         <member name="M:Godot.Particles2D.Restart">
             <summary>
-            Restarts all the existing particles.
             </summary>
         </member>
         <member name="T:Godot.ParticlesMaterial">
@@ -23690,6 +23685,11 @@
         <member name="M:Godot.Physics2DServer.BodySetShapeDisabled(Godot.RID,System.Int32,System.Boolean)">
             <summary>
             Disables shape in body if [code]disable[/code] is [code]true[/code].
+            </summary>
+        </member>
+        <member name="M:Godot.Physics2DServer.BodySetShapeAsOneWayCollision(Godot.RID,System.Int32,System.Boolean)">
+            <summary>
+            Enables one way collision on body if [code]enable[/code] is [code]true[/code].
             </summary>
         </member>
         <member name="M:Godot.Physics2DServer.BodyAttachObjectInstanceId(Godot.RID,System.Int32)">
@@ -31475,6 +31475,10 @@
             Requires that each vertex have UVs and normals set already.
             </summary>
         </member>
+        <member name="M:Godot.SurfaceTool.AddToFormat(System.Int32)">
+            <summary>
+            </summary>
+        </member>
         <member name="M:Godot.SurfaceTool.SetMaterial(Godot.Material)">
             <summary>
             Sets [Material] to be used by the [Mesh] you are constructing.
@@ -32973,7 +32977,7 @@
         </member>
         <member name="M:Godot.TileMap.WorldToMap(Godot.Vector2)">
             <summary>
-            Returns the tilemap (grid-based) coordinates corresponding to the given local position.
+            Returns the tilemap (grid-based) coordinatescorresponding to the given global position.
             </summary>
         </member>
         <member name="M:Godot.TileMap.UpdateDirtyQuadrants">

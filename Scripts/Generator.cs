@@ -7,7 +7,7 @@ using System.Linq;
 public class Generator : Node
 {
     [Export] int CurrentSeed = 0;
-
+    Thread thread = new Thread();
     // Noises
     private OpenSimplexNoise Noise = new OpenSimplexNoise();
 
@@ -17,12 +17,12 @@ public class Generator : Node
     private SpatialMaterial WaterMaterial;
 
     private Vector3 ChunkSize = new Vector3(16, 128, 16);
-    private int RenderDistance = 8;
+    private int RenderDistance = 4;
     private float VoxelSize = 1f;
 
     // Chunks
     private Dictionary VoxInChunks = new Dictionary();
-    private List<Node> LoadedChunks = new List<Node>();
+    private Dictionary LoadedChunks = new Dictionary();
 
     // Water
     private MeshInstance Water;
@@ -31,6 +31,8 @@ public class Generator : Node
     private float WaterOffset = 0.5f;
     private int WaterLevel = 60;
 
+    float tick = 0;
+    float UpdateRate = 2f;
     private Vector3[] Vertices = { new Vector3(0, 0, 0),
                                    new Vector3(1, 0, 0),
                                    new Vector3(1, 0, 1),
@@ -60,8 +62,35 @@ public class Generator : Node
 
         for (int i = -RenderDistance; i < RenderDistance; i++)
             for (int j = -RenderDistance; j < RenderDistance; j++)
-                LoadChunk(new Vector2(i, j));
+                LoadChunk(new Chunk(new Vector2(i, j)));
+                
     }
+    public override void _Process(float delta)
+    {
+        if (tick < UpdateRate)
+        {
+            tick += delta;
+            return;
+        }
+
+        int camX = int.Parse(Mathf.Stepify(Camera.Transform.origin.x / ChunkSize.x, 1).ToString());
+        int camZ = int.Parse(Mathf.Stepify(Camera.Transform.origin.z / ChunkSize.z, 1).ToString());
+        for (int x = -RenderDistance + camX; x < RenderDistance + camX; x++)
+        {
+            for (int z = -RenderDistance + camZ; z < RenderDistance + camZ; z++)
+            {
+                if (!LoadedChunks.ContainsKey(new Vector2(x, z)))
+                {
+                    //GD.Print("Check : " + new Vector2(x, z).ToString());
+                    LoadChunk(new Chunk(new Vector2(x, z)));
+                }
+            }
+        }
+        tick = 0;
+
+    }
+
+
 
     private void GenerateSeed()
     {
@@ -78,152 +107,110 @@ public class Generator : Node
         Noise.Persistence = 0.8f;
     }
 
-    /// <summary>
-    /// Preload Chunks data inside an array without rendering it yet.
-    /// This is useful to warm up the chunk before rendering it.
-    /// </summary>
-    /// <param name="cPosition">Chunk position.</param>
-    private void PreloadChunk(Vector2 cPosition)
+    private void InterpolatePass()
     {
-        for (int z = 0; z < ChunkSize.z; z++)
-        {
-            for (int x = 0; x < ChunkSize.x; x++)
-            {
-                var height = Mathf.Stepify((Noise.GetNoise2d(cPosition.x + x, cPosition.y + z) + 1) * ChunkSize.y / 2, 1);
-                VoxInChunks.Add(new Vector3(x, height, z).ToString(), new Vector3(x, height, z));
+        Vector3 a = new Vector3(0, 0, 0);
+        
+        Vector3 aa = new Vector3(1, 0, 0);
 
-                for (int y = 0; y < ChunkSize.y; y++)
-                {
-                    var pos = new Vector3(x + cPosition.x, y, z + cPosition.y);
-                    if (Noise.GetNoise3dv(pos) - ((y / ChunkSize.y) / 2) >= 0)
-                    {
-                        height += 1;
-                        VoxInChunks.Add(new Vector3(x, height, z).ToString(), new Vector3(x, height, z));
-                    }    
-                }
-            }
-        }
-        //for (int x = 0; x < ChunkSize.x; x++)
-        //    for (int z = 0; z < ChunkSize.z; z++)
-        //    {
-        //        var height = Mathf.Stepify((Noise.GetNoise2d(cPosition.x + x, cPosition.y + z) + 1) * ChunkSize.y , 1);
-        //        VoxInChunks.Add(new Vector3(x, height, z).ToString(), new Vector3(x, height, z));
-        //        //for (int y = 0; y <= height; y++)
-        //        //    VoxInChunks.Add(new Vector3(x, y, z).ToString(), new Vector3(x, y, z));
-        //    }
+        Vector3 bb = new Vector3(0, 0, 1);
+
+        Vector3 b = new Vector3(1, 0, 1);
     }
 
     /// <summary>
     /// Renders a chunk.
     /// </summary>
     /// <param name="cPosition">Global Position.</param>
-    private void LoadChunk(Vector2 pPosition)
+    private void LoadChunk(Chunk pChunk)
     {
-        
-        var cPosition = new Vector2(Mathf.Floor(pPosition.x) * ChunkSize.x, Mathf.Floor(pPosition.y) * ChunkSize.z);
         SurfaceTool = new SurfaceTool();
         SurfaceTool.Begin(Mesh.PrimitiveType.Triangles);
         SurfaceTool.SetMaterial(VoxMaterial);
 
-        PreloadChunk(cPosition);
-
-        foreach (Vector3 voxPos in VoxInChunks.Values)
-            CreateVoxel(SurfaceTool, voxPos, cPosition);
+        foreach (Vector3 voxPos in pChunk.Preload(Noise).Keys)
+            CreateVoxel(SurfaceTool, voxPos, pChunk);
 
         var chunk = new MeshInstance();
         chunk.Mesh = SurfaceTool.Commit();
-        chunk.Name = cPosition.ToString();
+        chunk.Name = pChunk.Offset.ToString();
+        chunk.Translation = new Vector3(pChunk.Offset.x * pChunk.ChunkSize.x, 0, pChunk.Offset.y * pChunk.ChunkSize.z);
         //chunk.CreateTrimeshCollision(); // Collisions generation.
         chunk.AddToGroup("Chunk");
         AddChild(chunk);
 
-        LoadedChunks.Add(chunk); // Keeping track of generated chunks.
+        LoadedChunks.Add(pChunk.Offset, pChunk.Offset); // Keeping track of generated chunks.
 
         SurfaceTool.Clear();
-
         VoxInChunks.Clear();
-        GD.Print("Chunk Done: " + pPosition.ToString());
+        GD.Print("Chunk Done: " + pChunk.Offset.ToString());
     }
 
 
     // Create each faces of a single voxel at pPositon in cPosition chunk.
     // TODO: Remove Surfacetool parameter.
-    private void CreateVoxel(SurfaceTool pSurfaceTool, Vector3 pPosition, Vector2 cPosition)
+    private void CreateVoxel(SurfaceTool pSurfaceTool, Vector3 pPosition, Chunk pChunk)
     {
-        var VoxelPos = new Vector3(pPosition.x + cPosition.x, pPosition.y, pPosition.z + cPosition.y);
         pSurfaceTool.AddColor( new Color("66CD00").Lightened(pPosition.y / 50 ));
 
-        if(CanCreateFace(pPosition.x, pPosition.y + 1, pPosition.z)) // Above
+        if(CanCreateFace(pPosition.x, pPosition.y + 1, pPosition.z, pChunk)) // Above
         {
             pSurfaceTool.AddNormal(new Vector3(0, 1, 0));
-            pSurfaceTool.AddVertex(Vertices[4] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[5] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[7] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[5] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[6] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[7] + VoxelPos);
+            pSurfaceTool.AddVertex(Vertices[4] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[5] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[7] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[5] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[6] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[7] + pPosition);
         }
-        if (CanCreateFace(pPosition.x + 1, pPosition.y , pPosition.z)) // Right
+        if (CanCreateFace(pPosition.x + 1, pPosition.y , pPosition.z, pChunk)) // Right
         {
             pSurfaceTool.AddNormal(new Vector3(1, 0, 0));
-            pSurfaceTool.AddVertex(Vertices[2] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[5] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[1] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[2] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[6] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[5] + VoxelPos); 
+            pSurfaceTool.AddVertex(Vertices[2] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[5] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[1] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[2] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[6] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[5] + pPosition); 
         }
-        if (CanCreateFace(pPosition.x - 1, pPosition.y , pPosition.z)) // Left
+        if (CanCreateFace(pPosition.x - 1, pPosition.y , pPosition.z, pChunk)) // Left
         {
             pSurfaceTool.AddNormal(new Vector3(-1, 0, 0));
-            pSurfaceTool.AddVertex(Vertices[0] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[7] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[3] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[0] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[4] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[7] + VoxelPos); 
+            pSurfaceTool.AddVertex(Vertices[0] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[7] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[3] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[0] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[4] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[7] + pPosition); 
 
         }
-        if (CanCreateFace(pPosition.x, pPosition.y, pPosition.z + 1)) // Front
+        if (CanCreateFace(pPosition.x, pPosition.y, pPosition.z + 1, pChunk)) // Front
         {
             pSurfaceTool.AddNormal(new Vector3(0, 0, 1));
-            pSurfaceTool.AddVertex(Vertices[3] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[6] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[2] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[3] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[7] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[6] + VoxelPos); 
+            pSurfaceTool.AddVertex(Vertices[3] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[6] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[2] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[3] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[7] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[6] + pPosition); 
         }
-        if (CanCreateFace(pPosition.x, pPosition.y, pPosition.z - 1)) // Above
+        if (CanCreateFace(pPosition.x, pPosition.y, pPosition.z - 1, pChunk)) // Above
         {
             pSurfaceTool.AddNormal(new Vector3(0, 0, -1));
-            pSurfaceTool.AddVertex(Vertices[0] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[1] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[5] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[5] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[4] + VoxelPos);
-            pSurfaceTool.AddVertex(Vertices[0] + VoxelPos);
+            pSurfaceTool.AddVertex(Vertices[0] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[1] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[5] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[5] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[4] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[0] + pPosition);
         }
     }
 
-    private bool isVisible(float x, float y, float z)
-    {
-        Vector3[] Sides = new Vector3[]{ new Vector3(x + 1, y, z),new Vector3(x - 1, y, z),
-                                            new Vector3(x, y + 1, z),new Vector3(x, y - 1, z),
-                                            new Vector3(x, y, z + 1),new Vector3(x, y, z - 1)};
-
-        foreach (Vector3 side in Sides)
-            if (!VoxInChunks.ContainsKey(side.ToString())) return true;
-
-        return false;
-    }
-
-
     // Check if there is a voxel at X Y Z position in the current preloaded chunk.
-    private bool CanCreateFace(float x, float y, float z)
+    private bool CanCreateFace(float x, float y, float z, Chunk pChunk)
     {
         //GD.Print(x + "-" + y + "-" + z);
-        return !( VoxInChunks.ContainsKey( new Vector3(x, y, z).ToString() )  );//|| 
+        return !(pChunk.Voxels.ContainsKey( new Vector3(x, y, z) ));//|| 
             //( (x % (ChunkSize.x ) == 0 || z % (ChunkSize.z) == 0 || x <= 1 || z <= 1 ) && VoxInChunks.ContainsKey(new Vector3(x, y + 1, z).ToString()) );
     }
 }
