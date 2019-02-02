@@ -2,5 +2,6 @@
 
 [resource]
 
-albedo_color = Color( 0.305882, 1, 0.054902, 1 )
+flags_vertex_lighting = true
+vertex_color_use_as_albedo = true
 

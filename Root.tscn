@@ -1,22 +1,24 @@
 [gd_scene load_steps=3 format=2]
 
-[ext_resource path="res://Scripts/Generator.cs" type="Script" id=1]
-[ext_resource path="res://assets/maujoe.camera_control/scripts/camera_control.gd" type="Script" id=2]
+[ext_resource path="res://assets/maujoe.camera_control/scripts/camera_control.gd" type="Script" id=1]
+[ext_resource path="res://Scripts/Generator.cs" type="Script" id=2]
 
 [node name="Root" type="Spatial"]
 
-[node name="Generator" type="Node" parent="."]
-script = ExtResource( 1 )
-
 [node name="Camera" type="Camera" parent="."]
-transform = Transform( 0.0718244, -0.705281, 0.705281, 0, 0.707107, 0.707107, -0.997417, -0.0507875, 0.0507875, 22.8485, 34.3015, 22.5086 )
+transform = Transform( 0.072, -0.705, 0.705, 0, 0.707, 0.707, -0.997, -0.051, 0.051, 22.848, 160, 22.509 )
 current = true
-fov = 75.3
+fov = 80.0
 size = 49.1095
-far = 500.0
-script = ExtResource( 2 )
+near = 0.03
+far = 2642.7
+script = ExtResource( 1 )
 collisions = false
-max_speed = Vector3( 15, 15, 15 )
+max_speed = Vector3( 50, 50, 50 )
+
+[node name="Generator" type="Node" parent="."]
+script = ExtResource( 2 )
+UpdateRate = 0.5
 
 [node name="Sun" type="DirectionalLight" parent="."]
 transform = Transform( 0.0672027, 0.670175, -0.739154, -0.197632, 0.735091, 0.648523, 0.97797, 0.102498, 0.181848, 0, 0, 0 )

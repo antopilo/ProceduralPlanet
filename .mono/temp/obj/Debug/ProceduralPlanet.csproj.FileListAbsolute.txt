@@ -1,1 +1,7 @@
 C:\Users\1780489\Desktop\ProceduralPlanet\.mono\temp\obj\Debug\ProceduralPlanet.csproj.CoreCompileInputs.cache
+F:\Desktop\ProceduralPlanet\.mono\temp\bin\Debug\ProceduralPlanet.dll
+F:\Desktop\ProceduralPlanet\.mono\temp\bin\Debug\ProceduralPlanet.pdb
+F:\Desktop\ProceduralPlanet\.mono\temp\obj\Debug\ProceduralPlanet.csprojAssemblyReference.cache
+F:\Desktop\ProceduralPlanet\.mono\temp\obj\Debug\ProceduralPlanet.csproj.CoreCompileInputs.cache
+F:\Desktop\ProceduralPlanet\.mono\temp\obj\Debug\ProceduralPlanet.dll
+F:\Desktop\ProceduralPlanet\.mono\temp\obj\Debug\ProceduralPlanet.pdb
