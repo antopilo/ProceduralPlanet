@@ -2,6 +2,7 @@
 
 [resource]
 
-flags_vertex_lighting = true
+flags_use_point_size = true
+flags_ensure_correct_normals = true
 vertex_color_use_as_albedo = true
 

@@ -6,12 +6,12 @@
 [node name="Root" type="Spatial"]
 
 [node name="Camera" type="Camera" parent="."]
-transform = Transform( 0.072, -0.705, 0.705, 0, 0.707, 0.707, -0.997, -0.051, 0.051, 22.848, 160, 22.509 )
+transform = Transform( 0.0598216, -0.97957, 0.192, 0.0401194, 0.194549, 0.980072, -0.997403, -0.0509266, 0.0509379, 22.848, 160, 22.509 )
 current = true
-fov = 80.0
-size = 49.1095
-near = 0.03
-far = 2642.7
+fov = 90.0
+size = 757.47
+near = 0.01
+far = 1492.8
 script = ExtResource( 1 )
 collisions = false
 max_speed = Vector3( 50, 50, 50 )
@@ -22,6 +22,9 @@ UpdateRate = 0.5
 
 [node name="Sun" type="DirectionalLight" parent="."]
 transform = Transform( 0.0672027, 0.670175, -0.739154, -0.197632, 0.735091, 0.648523, 0.97797, 0.102498, 0.181848, 0, 0, 0 )
-light_color = Color( 1, 0.976471, 0.811765, 1 )
+light_color = Color( 0.996078, 0.960784, 0.686275, 1 )
+light_energy = 1.77
+light_indirect_energy = 1.51
+light_bake_mode = 2
 shadow_enabled = true
 
