@@ -14,14 +14,14 @@ public enum BlockType
 // A single voxel.
 public struct Voxel
 {
-    public BlockType  type; 
+    public BlockType type; 
     public Vector3 Position;
 }
 
 public class Chunk : Object
 {
     public static RandomNumberGenerator RandomGenerator = new RandomNumberGenerator();
-    public Vector3 ChunkSize = new Vector3(16, 255, 16);
+    public Vector3 ChunkSize = new Vector3(32, 255, 32);
     public Vector2 Offset; // Chunk position from X:0, Y:0
 
     // All the voxels into the chunk.
@@ -29,21 +29,37 @@ public class Chunk : Object
 
     // Generation settings
     // TODO: Move generation settings to another class.
-    private float FloatTreshold = 0.2f;
+    private float FloatTreshold = 0.1f;
     private int CarpetMaxHeight = 128;
+
+    // Trees
+    private int TreeChance = 50;
+    private int MaxTree = 4;
+
+    // Rocks
+    private int RockChance = 33;
 
     public Chunk(Vector2 pOffset, Dictionary<Vector2, Chunk> pQueue, OpenSimplexNoise pNoise)
     {
+        // if the chunk was already loaded.
         if (pQueue.ContainsKey(pOffset))
             return;
+
+        // Passing in the seed.
         RandomGenerator.Seed = pNoise.Seed;
         Offset = pOffset;
 
-        // Generation
+        // Fill in the chunk with data.
         Generate(pNoise);
+
+        // When the preloading is done, add it to the queue.
         pQueue.Add(Offset, this);
     }
 
+    /// <summary>
+    /// Generate the terrain of the chunk.
+    /// </summary>
+    /// <param name="pNoise"></param>
     public void Generate(OpenSimplexNoise pNoise)
     {
         // Terrain generation(noise2D and noise3D).
@@ -52,91 +68,150 @@ public class Chunk : Object
             {
                 // Global position in the noise.
                 Vector2 globalPosition = new Vector2((Offset.x * ChunkSize.x) + x, (Offset.y * ChunkSize.z) + z);
+                float height = Mathf.Stepify((pNoise.GetNoise2dv(globalPosition) + 1) * CarpetMaxHeight, 1);
 
-                // Height from 3D noise.
-                float height = Mathf.Stepify( ( pNoise.GetNoise2dv(globalPosition) + 1 ) * CarpetMaxHeight, 1);
-
-                // Make new voxel with height.
+                // Make new voxel .
                 Voxel voxel = new Voxel()
                 {
                     Position = new Vector3(x, height, z),
                     type = 0
                 };
-                
                 Voxels.Add(voxel.Position, voxel);
 
-                #region 3D Noise very expensive.
-                for (int y = 0; y < ChunkSize.y; y += 1)
+                #region 3D Noise, very expensive.
+                for (int y = int.Parse(height.ToString()); y < ChunkSize.y; y += 1)
                 {
                     Vector3 positionAir = new Vector3(x, y, z);
                     if (Voxels.ContainsKey(positionAir)) // Skip ground 0 vox place earlier.
                         continue;
 
                     Vector3 OffsetGlobal = new Vector3(Offset.x * ChunkSize.x, y, Offset.y * ChunkSize.z); // Global position in noise.
-                    float HalfHeighOffset = y / ChunkSize.y / 3; // Compasenting for the waves.
-                    float density = pNoise.GetNoise3dv(positionAir + OffsetGlobal) ; // Density in the noise.
-
-                    if (density >= 0)
+                    float density = pNoise.GetNoise3dv(positionAir + OffsetGlobal) / (y / 2); // Density in the noise.
+                    if (density > FloatTreshold && density <= FloatTreshold + FloatTreshold / 2)
                     {
                         Vector3 voxelPosition;
-                        //if (density >= FloatTreshold) // Make floating bubbles and caves.
-                        //{
-                        //    voxelPosition = new Vector3(x, y, z);
-                        //}
-                        //else // Pull the bubbles down on the terrain.
-                        //{
                         height += 1;
-                        voxelPosition = new Vector3(new Vector3(x, height, z));
-                        //}
+                        voxelPosition = new Vector3(x, height, z);
 
-                        if (!Voxels.ContainsKey(voxelPosition))
-                        {
-                            // while pulling down the bubles pos might be on existing vox.
-                            Voxel vox = new Voxel()
-                            {
-                                Position = voxelPosition,
-                                type = BlockType.rock
-                            };
-                            //Security
-                            if(!Voxels.ContainsKey(voxel.Position))
-                                Voxels.Add(voxel.Position, voxel);
-                        }
+                        // while pulling down the bubles pos might be on existing vox.
+                        voxel.Position = voxelPosition;
+                        voxel.type = BlockType.rock;
+
+
+                        if (!Voxels.ContainsKey(voxel.Position))
+                            Voxels.Add(voxel.Position, voxel);
+
                     }
-                } 
+                }
                 #endregion // Disabled for now.
             }
 
         // Vegetation pass.
-        PlaceTrees();
+        if (RandomGenerator.RandiRange(1, 100) < TreeChance)
+        {
+            // Choose a random number of tree in the chunk.
+            int numberTree = RandomGenerator.RandiRange(1, MaxTree);
+
+            // Place each tree.
+            for (int i = 0; i < numberTree; i++)
+                PlaceTrees();
+        }
+
+        // Boulder pass.
+        RandomGenerator.Randomize();
+
+        // can only place 1 boulder per chunk.
+        if (RandomGenerator.RandiRange(1, 100) < RockChance)
+        {
+            int x = RandomGenerator.RandiRange(0, int.Parse(ChunkSize.x.ToString()) - 1);
+            int z = RandomGenerator.RandiRange(0, int.Parse(ChunkSize.z.ToString()) - 1);
+
+            // Find ground height
+            for (int y = int.Parse(ChunkSize.y.ToString()); y > 0; y--)
+            {
+                if (Voxels.ContainsKey(new Vector3(x, y, z)) && Voxels[new Vector3(x, y, z)].type == BlockType.grass)
+                {
+                    MakeBoulder(new Vector3(x, y, z));
+                    return;
+                }
+            }
+        }
     }
-        
-    
-    // Generate a randome tree.
+
+
+    /// <summary>
+    /// Place a random tree at a arandom position.
+    /// </summary>
     public void PlaceTrees()
     {
-        // Select random vox.
+        RandomGenerator.Randomize();
+        Tree tree = new Tree(RandomGenerator);
+
+        // Select random Position
         int x = RandomGenerator.RandiRange(0, 15);
-        int y;
         int z = RandomGenerator.RandiRange(0, 15);
 
-        Tree tree = new Tree();
-        Vector3 rootHeightOffset;
         // Get highest vox at x, y. Starting from the sky until it finds something.
-        for (int i = int.Parse(ChunkSize.y.ToString()); i > 0; i--) // From the sky 
-            if (Voxels.ContainsKey( new Vector3(x, i - tree.Height, z) ))
+        for (int i = int.Parse(ChunkSize.y.ToString()); i > 0; i--)
+        {
+            Vector3 scanPosition = new Vector3(x, i - tree.Height, z);
+            if (Voxels.ContainsKey(scanPosition) && Voxels[scanPosition].type == BlockType.grass)
             {
-                rootHeightOffset = new Vector3(0, i - tree.Height, 0);
-                foreach (Voxel voxel in tree.Voxels.Values) // Then place the voxels of the tree.// ofc always security check.
-                    if (!Voxels.ContainsKey( voxel.Position + rootHeightOffset ))// Place the voxel finally :). Lucky one.
+                // Then place the voxels of the tree.// ofc always security check.
+                foreach (Voxel voxel in tree.Voxels.Values)
+                {
+                    if (!Voxels.ContainsKey(voxel.Position + scanPosition))
                     {
-                        var vox2 = voxel;
-                        var pos = vox2.Position + new Vector3(0, rootHeightOffset.y, 0);
-                        vox2.Position += new Vector3(0, rootHeightOffset.y, 0);
-                        Voxels.Add(pos, vox2);
-                    } 
-                         
+                        // Make our block.
+                        Voxel newVoxel = new Voxel()
+                        {
+                            Position = voxel.Position + new Vector3(0, scanPosition.y, 0),
+                            type = voxel.type
+                        };
+
+                        if (!Voxels.ContainsKey(newVoxel.Position))
+                            Voxels.Add(newVoxel.Position, newVoxel);
+                    }
+                }
                 return;
             }
+        }
+
+    }
+
+
+    /// <summary>
+    /// Adds a rock boulder at pOffset in the chunk.
+    /// </summary>
+    /// <param name="pOffset"></param>
+    public void MakeBoulder(Vector3 pOffset)
+    {
+        // Random width of the boulder
+        int boulderWidth = RandomGenerator.RandiRange(3, 6);
+        for (int x = -boulderWidth; x < boulderWidth; x++)
+            for (int y = -boulderWidth; y < boulderWidth; y++)
+                for (int z = -boulderWidth; z < boulderWidth; z++)
+                {
+                    // If outside the sphere skip.
+                    if ((new Vector3(x, y, z) - new Vector3(0, 0, 0)).Length() >= boulderWidth)
+                        continue;
+
+                    Vector3 voxelPosition = new Vector3(x + pOffset.x, y + pOffset.y, z + pOffset.z);
+
+                    // Check if there is space for the new voxe.
+                    if (Voxels.ContainsKey(voxelPosition))
+                        continue;
+
+                    // Create new Voxel.
+                    var newVoxel = new Voxel()
+                    {
+                        Position = voxelPosition,
+                        type = BlockType.rock
+                    };
+                    Voxels.Add(voxelPosition, newVoxel);
+                }
+
+             
     }
 }
 

@@ -1,93 +1,110 @@
 ﻿using Godot;
 using System.Collections.Generic;
 
-public class Tree : Object
+public class Tree
 {
-    public int Height;
-    public Dictionary<Vector3, Voxel> Voxels = new Dictionary<Vector3, Voxel>();
+    public int Height, Width; // Height and witdh of th trunk
+    public Dictionary<Vector3, Voxel> Voxels = new Dictionary<Vector3, Voxel>(); // Voxels
+    private RandomNumberGenerator rng; // Generator.
 
-    private RandomNumberGenerator rng = new RandomNumberGenerator();
-
-
-    public Tree()
+    public Tree(RandomNumberGenerator prng)
     {
+        rng = prng;
         // Randomizing the seed.
         rng.Randomize();
-
         
         // Getting the height of the trunk.
-        Height = rng.RandiRange(4, 8);
-        //Width = rng.RandiRange(1, 3); <- TODO : Add thickness to trees.
+        Height = rng.RandiRange(8, 16);
+        Width = rng.RandiRange(0, 1);
+
+        // Start the procedure
         MakeTrunk();
-        PlaceLeaves();
     }
     
+    /// <summary>
+    /// Place the trunk, then leaves.
+    /// </summary>
     private void MakeTrunk()
     {
         // Loop up the trunk.
-        for (int i = 0; i < Height; i++)
-            // Check if a vox is there. Not needed but for security.
-            if (!Voxels.ContainsKey(new Vector3(0, i, 0)))
+        for (int y = 0; y < Height; y++)
+        {
+            if(Width == 0) // if the random width of the trunk is 0, assume it's 1.
             {
-                // Make voxel.
                 Voxel voxel = new Voxel()
                 {
-                    Position = new Vector3(0, i, 0),
+                    Position = new Vector3(0, y, 0),
                     type = BlockType.wood
                 };
 
                 // Add to the dictionary.
-                Voxels.Add(new Vector3(0, i, 0), voxel);
+                Voxels.Add(voxel.Position, voxel);
             }
+            else // if the trunk is bigger than 1.
+            {
+                for (int x = -Width; x <= Width; x++) // x
+                    for (int z = -Width; z <= Width; z++)
+                    {
+                        // Make voxel.
+                        Voxel voxel = new Voxel()
+                        {
+                            Position = new Vector3(x, y, z),
+                            type = BlockType.wood
+                        };
+
+                        // Add to the dictionary.
+                        Voxels.Add(voxel.Position, voxel);
+                    }
+            }
+        }
+
+        // Make a random number of leaves spheres. from 0 to 4.
+        for (int i = 0; i < rng.RandiRange(0,4); i++)
+        {
+            int x = rng.RandiRange(1, 5);
+            int y = Height - rng.RandiRange(1, 5); // Offset from the top of the trunk.
+            int z = rng.RandiRange(1, 5);
+
+            PlaceLeaves(new Vector3(x, y, z));
+        }
+       
+        // Always place some leaves to the top of the trunk.
+        // We don't want "stick" trees.
+        PlaceLeaves(new Vector3(0,Height,0));
     }
 
-    public void PlaceLeaves()
+    /// <summary>
+    ///  Make a sphere at the top of the trunk.
+    /// </summary>
+    public void PlaceLeaves(Vector3 pOffset)
     {
-        Voxel voxel = new Voxel()
-        {
-            Position = new Vector3(0, Height + 1, 0),
-            type = BlockType.leaves
-        };
-        // Top and sides.
-        Voxels.Add(voxel.Position, voxel);
-        voxel.Position = new Vector3(-1, Height + 1, 0); // L
-        Voxels.Add(voxel.Position, voxel);
-        voxel.Position = new Vector3(1, Height + 1, 0); // R
-        Voxels.Add(voxel.Position, voxel);
-        voxel.Position = new Vector3(0, Height + 1, 1); // F
-        Voxels.Add(voxel.Position, voxel);
-        voxel.Position = new Vector3(0, Height + 1, -1); //B
-        Voxels.Add(voxel.Position, voxel);
-        // Corners
-        voxel.Position = new Vector3(-1, Height + 1, -1); //LB
-        Voxels.Add(voxel.Position, voxel);
-        voxel.Position = new Vector3(1, Height + 1, 1); // RF
-        Voxels.Add(voxel.Position, voxel);
-        voxel.Position = new Vector3(-1, Height + 1, 1); // LF
-        Voxels.Add(voxel.Position, voxel);
-        voxel.Position = new Vector3(1, Height + 1, -1); // RB
-        Voxels.Add(voxel.Position, voxel);
+        // Random Circle width.
+        int leaveWidth = rng.RandiRange(4, 6);
 
-        // height - 1
-        voxel.Position = new Vector3(-1, Height, 0); // L
-        Voxels.Add(voxel.Position, voxel);
-        voxel.Position = new Vector3(1, Height, 0); // R
-        Voxels.Add(voxel.Position, voxel);
-        voxel.Position = new Vector3(0, Height, 1); // F
-        Voxels.Add(voxel.Position, voxel);
-        voxel.Position = new Vector3(0, Height, -1); //B
-        Voxels.Add(voxel.Position, voxel);
-        // Corners
-        voxel.Position = new Vector3(-1, Height, -1); //LB
-        Voxels.Add(voxel.Position, voxel);
-        voxel.Position = new Vector3(1, Height, 1); // RF
-        Voxels.Add(voxel.Position, voxel);
-        voxel.Position = new Vector3(-1, Height, 1); // LF
-        Voxels.Add(voxel.Position, voxel);
-        voxel.Position = new Vector3(1, Height, -1); // RB
-        Voxels.Add(voxel.Position, voxel);
+        // Iterating through a box of the size of the leaveWidth.
+        // Checking if the distance from i,k,j to the center only if
+        // it's lower than the f the cube. Resulting in a perfect sphere.
+        for (int i = -leaveWidth; i < leaveWidth; i++)
+            for (int k = -leaveWidth; k < leaveWidth; k++)
+                for (int j = -leaveWidth; j < leaveWidth; j++)
+                {
+                    // If the position is outside the range of the circle skip.
+                    if ( !(( new Vector3(i, j, k) - new Vector3(0, 0, 0) ).Length() < leaveWidth) )
+                        continue;
 
-
+                    // Placing the voxel.
+                    Vector3 voxPosition = new Vector3(i + pOffset.x, j + pOffset.y, k + pOffset.z);
+                    if (!Voxels.ContainsKey(voxPosition)) // Checking if there is already a block there.
+                    {
+                        // new Voxel.
+                        Voxel newVoxel = new Voxel()
+                        {
+                            Position = voxPosition,
+                            type = BlockType.leaves
+                        };
+                        Voxels.Add(voxPosition, newVoxel); // Placing it.
+                    }
+                }
     }
 }
 

@@ -18,7 +18,6 @@ public class Generator : Node
 
     [Export] private int RenderDistance = 8;
     [Export] private int PreloadDistance = 12;
-    private float VoxelSize = 1f;
 
     // Chunks
     private Dictionary<Vector2, Chunk> LoadedChunks = new Dictionary<Vector2, Chunk>();
@@ -53,21 +52,28 @@ public class Generator : Node
 
         GenerateSeed();
 
-        //Water = new MeshInstance();
-        //WaterMesh = new PlaneMesh();
-        //WaterMesh.Size = new Vector2(VoxelSize * ChunkSize.x * RenderDistance * 32, VoxelSize * ChunkSize.z * RenderDistance * 32);
-        //WaterMesh.SetMaterial(WaterMaterial);
-        //Water.SetMesh(WaterMesh);
-        //Water.Translation = new Vector3(0, WaterLevel - WaterOffset, 0);
-        //AddChild(Water);
+        Water = new MeshInstance();
+        WaterMesh = new PlaneMesh();
+        WaterMesh.Size = new Vector2(ChunkSize.x * RenderDistance * 32, ChunkSize.z * RenderDistance * 32);
+        WaterMesh.SetMaterial(WaterMaterial);
+        Water.SetMesh(WaterMesh);
+        Water.Translation = new Vector3(0, WaterLevel - WaterOffset, 0);
+        AddChild(Water);
 
-        int max = PreloadDistance * PreloadDistance ;
-        for (int i = -PreloadDistance / 2; i < PreloadDistance / 2; i++)
-            for (int j = -PreloadDistance / 2; j < PreloadDistance / 2; j++)
+        int count = 0;
+        for (int i = -PreloadDistance; i < PreloadDistance; i++)
+            for (int j = -PreloadDistance; j < PreloadDistance; j++)
             {
-                GD.Print("Preloading World : " + ((i * j) + ((i*j) / 2) ) / max * 100 + "% done.");
+                count++;
+                GD.Print("Preloading World : " + (count) + " / " + (PreloadDistance*2) * PreloadDistance * 2 + "done.");
                 new Chunk(new Vector2(i, j), PreloadedChunks, Noise);
             }
+
+        //new Chunk(new Vector2(0, 0), PreloadedChunks, Noise, Thread1);
+
+        
+
+        
     }
     public override void _Process(float delta)
     {
@@ -85,15 +91,22 @@ public class Generator : Node
         }
         tick = 0;
 
+
         List<Vector2> keys = new List<Vector2>(PreloadedChunks.Keys);
         foreach (var c in keys)
         {
-            ThreadPreload(PreloadedChunks[c]);
-            PreloadedChunks.Remove(c);
+            if( (new Vector2(camX,camZ) - c).Length() < RenderDistance)
+            {
+                Render(PreloadedChunks[c]);
+                PreloadedChunks.Remove(c);
+            } 
         }
     }
 
 
+    /// <summary>
+    ///  Create a random seed.
+    /// </summary>
     private void GenerateSeed()
     {
         if(CurrentSeed != 0)
@@ -111,7 +124,7 @@ public class Generator : Node
     }
 
   
-    private void ThreadPreload(Chunk pChunk)
+    private void Render(Chunk pChunk)
     {
         SurfaceTool = new SurfaceTool();
         SurfaceTool.Begin(Mesh.PrimitiveType.Triangles);
@@ -133,12 +146,12 @@ public class Generator : Node
 
         AddChild(chunk);
 
-        Tween t = new Tween();
-        AddChild(t);
-        t.InterpolateProperty(chunk, "scale", new Vector3(0, 0, 0), new Vector3(1, 1, 1), 2f, Tween.TransitionType.Expo, Tween.EaseType.Out);
-        t.InterpolateProperty(chunk, "translation", chunk.Translation + new Vector3(0,255 * 2,0), chunk.Translation, 2f, Tween.TransitionType.Expo, Tween.EaseType.Out);
-        chunk.Scale = new Vector3(0, 0, 0);
-        t.Start();
+        //Tween t = new Tween();
+        //AddChild(t);
+        //t.InterpolateProperty(chunk, "scale", new Vector3(0, 0, 0), new Vector3(1, 1, 1), 2f, Tween.TransitionType.Expo, Tween.EaseType.Out);
+        //t.InterpolateProperty(chunk, "translation", chunk.Translation + new Vector3(0,255 * 2,0), chunk.Translation, 2f, Tween.TransitionType.Expo, Tween.EaseType.Out);
+        //chunk.Scale = new Vector3(0, 0, 0);
+        //t.Start();
 
         if (!LoadedChunks.ContainsKey(pChunk.Offset))
             LoadedChunks.Add(pChunk.Offset, pChunk);
@@ -152,6 +165,7 @@ public class Generator : Node
     private void CreateVoxel(SurfaceTool pSurfaceTool, Voxel pVoxel, Chunk pChunk)
     {
         Vector3 pPosition = pVoxel.Position;
+        
         // Colors
         switch (pVoxel.type)
         {
@@ -175,19 +189,16 @@ public class Generator : Node
                 break;
         }
 
-
-        bool left, right, front, back, top, bottom = false;
-
-        left = !pChunk.Voxels.ContainsKey(pPosition + new Vector3(-1, 0, 0));
-        right = !pChunk.Voxels.ContainsKey(pPosition + new Vector3(1, 0, 0));
-        front = !pChunk.Voxels.ContainsKey(pPosition + new Vector3(0, 0, 1));
-        back = !pChunk.Voxels.ContainsKey(pPosition + new Vector3(0, 0, -1));
-        top = !pChunk.Voxels.ContainsKey(pPosition + new Vector3(0, 1, 0));
-        bottom = !pChunk.Voxels.ContainsKey(pPosition + new Vector3(0, -1, 0));
+        bool left = !pChunk.Voxels.ContainsKey(pPosition + new Vector3(-1, 0, 0));
+        bool right = !pChunk.Voxels.ContainsKey(pPosition + new Vector3(1, 0, 0));
+        bool front = !pChunk.Voxels.ContainsKey(pPosition + new Vector3(0, 0, 1));
+        bool back = !pChunk.Voxels.ContainsKey(pPosition + new Vector3(0, 0, -1));
+        bool top = !pChunk.Voxels.ContainsKey(pPosition + new Vector3(0, 1, 0));
+        bool bottom = !pChunk.Voxels.ContainsKey(pPosition + new Vector3(0, -1, 0));
 
         // If block is hidden.
-        if (left && right && front && back && top && bottom || pPosition.y < 0)
-            return;
+        //if (left && right && front && back && top && bottom || pPosition.y < 0)
+        //    return;
 
         if (top) // Above
         {
@@ -287,7 +298,7 @@ public class Generator : Node
             pSurfaceTool.AddVertex(Vertices[4] + pPosition);
             pSurfaceTool.AddVertex(Vertices[0] + pPosition);
         }
-        if (bottom && pPosition.y != 0)
+        if (bottom)
         {
             pSurfaceTool.AddNormal(new Vector3(0, 1, 0));
             pSurfaceTool.AddVertex(Vertices[1] + pPosition);
