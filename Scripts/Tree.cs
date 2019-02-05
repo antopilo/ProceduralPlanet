@@ -86,10 +86,10 @@ public class Tree
         // it's lower than the f the cube. Resulting in a perfect sphere.
         for (int i = -leaveWidth; i < leaveWidth; i++)
             for (int k = -leaveWidth; k < leaveWidth; k++)
-                for (int j = -leaveWidth; j < leaveWidth; j++)
+                for (int j = -leaveWidth / 2; j < leaveWidth / 2; j++)
                 {
                     // If the position is outside the range of the circle skip.
-                    if ( !(( new Vector3(i, j, k) - new Vector3(0, 0, 0) ).Length() < leaveWidth) )
+                    if ( !(( new Vector3(i, j * 2, k) - new Vector3(0, 0, 0) ).Length() < leaveWidth) )
                         continue;
 
                     // Placing the voxel.

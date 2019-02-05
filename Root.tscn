@@ -26,5 +26,5 @@ light_color = Color( 0.996078, 0.960784, 0.686275, 1 )
 light_energy = 1.77
 light_indirect_energy = 1.51
 light_bake_mode = 2
-shadow_enabled = true
+shadow_contact = 16.0
 

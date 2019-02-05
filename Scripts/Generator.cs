@@ -23,6 +23,8 @@ public class Generator : Node
     private Dictionary<Vector2, Chunk> LoadedChunks = new Dictionary<Vector2, Chunk>();
     private Dictionary<Vector2, Chunk> PreloadedChunks = new Dictionary<Vector2, Chunk>();
 
+    private Thread Thread;
+
     // Water
     private MeshInstance Water;
     private PlaneMesh WaterMesh;
@@ -60,29 +62,35 @@ public class Generator : Node
         Water.Translation = new Vector3(0, WaterLevel - WaterOffset, 0);
         AddChild(Water);
 
+        
+        Thread = new Godot.Thread();
+        Preload();
+
+
+        //new Chunk(new Vector2(0, 0), PreloadedChunks, Noise, Thread1);
+    }
+
+    public void Preload()
+    {
         int count = 0;
         for (int i = -PreloadDistance; i < PreloadDistance; i++)
             for (int j = -PreloadDistance; j < PreloadDistance; j++)
             {
                 count++;
-                GD.Print("Preloading World : " + (count) + " / " + (PreloadDistance*2) * PreloadDistance * 2 + "done.");
+                GD.Print("Preloading World : " + (count) + " / " + (PreloadDistance * 2) * PreloadDistance * 2 + "done.");
                 new Chunk(new Vector2(i, j), PreloadedChunks, Noise);
             }
-
-        //new Chunk(new Vector2(0, 0), PreloadedChunks, Noise, Thread1);
-
-        
-
-        
     }
+
+
     public override void _Process(float delta)
     {
         int camX = int.Parse(Mathf.Stepify(Camera.Transform.origin.x / ChunkSize.x, 1).ToString());
         int camZ = int.Parse(Mathf.Stepify(Camera.Transform.origin.z / ChunkSize.z, 1).ToString());
-        for (int x = -RenderDistance + camX; x < RenderDistance + camX; x++)
-            for (int z = -RenderDistance + camZ; z < RenderDistance + camZ; z++)
-                if (!LoadedChunks.ContainsKey(new Vector2(x, z)) )
-                      new Chunk(new Vector2(x, z), PreloadedChunks, Noise);
+        //for (int x = -RenderDistance + camX; x < RenderDistance + camX; x++)
+        //    for (int z = -RenderDistance + camZ; z < RenderDistance + camZ; z++)
+        //        if (!LoadedChunks.ContainsKey(new Vector2(x, z)) )
+        //              new Chunk(new Vector2(x, z), PreloadedChunks, Noise);
    
         if (tick < UpdateRate)
         {
@@ -91,16 +99,13 @@ public class Generator : Node
         }
         tick = 0;
 
+        if (PreloadedChunks.Count < 0)
+            return;
 
         List<Vector2> keys = new List<Vector2>(PreloadedChunks.Keys);
-        foreach (var c in keys)
-        {
-            if( (new Vector2(camX,camZ) - c).Length() < RenderDistance)
-            {
-                Render(PreloadedChunks[c]);
-                PreloadedChunks.Remove(c);
-            } 
-        }
+        Render(PreloadedChunks[keys[0]]);
+        PreloadedChunks.Remove(keys[0]);
+        
     }
 
 

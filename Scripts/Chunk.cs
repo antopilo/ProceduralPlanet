@@ -39,21 +39,25 @@ public class Chunk : Object
     // Rocks
     private int RockChance = 33;
 
+    private Dictionary<Vector2, Chunk> Queue;
+
     public Chunk(Vector2 pOffset, Dictionary<Vector2, Chunk> pQueue, OpenSimplexNoise pNoise)
     {
+
         // if the chunk was already loaded.
         if (pQueue.ContainsKey(pOffset))
             return;
 
         // Passing in the seed.
-        RandomGenerator.Seed = pNoise.Seed;
+        RandomGenerator.Randomize();
         Offset = pOffset;
+        Queue = pQueue;
 
-        // Fill in the chunk with data.
         Generate(pNoise);
+        
 
         // When the preloading is done, add it to the queue.
-        pQueue.Add(Offset, this);
+        // pQueue.Add(Offset, this);
     }
 
     /// <summary>
@@ -79,15 +83,17 @@ public class Chunk : Object
                 Voxels.Add(voxel.Position, voxel);
 
                 #region 3D Noise, very expensive.
-                for (int y = int.Parse(height.ToString()); y < ChunkSize.y; y += 1)
+                for (int y = int.Parse(ChunkSize.y.ToString()); y > height; y--)
                 {
                     Vector3 positionAir = new Vector3(x, y, z);
+
                     if (Voxels.ContainsKey(positionAir)) // Skip ground 0 vox place earlier.
                         continue;
 
                     Vector3 OffsetGlobal = new Vector3(Offset.x * ChunkSize.x, y, Offset.y * ChunkSize.z); // Global position in noise.
                     float density = pNoise.GetNoise3dv(positionAir + OffsetGlobal) / (y / 2); // Density in the noise.
-                    if (density > FloatTreshold && density <= FloatTreshold + FloatTreshold / 2)
+                    //float aboveDensity = pNoise.GetNoise3dv(positionAir + OffsetGlobal + new Vector3(0, 1, 0) / (y / 2));
+                    if (density >= 0 && density <= FloatTreshold)
                     {
                         Vector3 voxelPosition;
                         height += 1;
@@ -95,8 +101,10 @@ public class Chunk : Object
 
                         // while pulling down the bubles pos might be on existing vox.
                         voxel.Position = voxelPosition;
-                        voxel.type = BlockType.rock;
-
+                        if (density < 0.1)
+                            voxel.type = BlockType.grass;
+                        else
+                            voxel.type = BlockType.rock;
 
                         if (!Voxels.ContainsKey(voxel.Position))
                             Voxels.Add(voxel.Position, voxel);
@@ -136,6 +144,8 @@ public class Chunk : Object
                 }
             }
         }
+
+        Queue.Add(Offset, this);
     }
 
 
@@ -144,11 +154,13 @@ public class Chunk : Object
     /// </summary>
     public void PlaceTrees()
     {
-        RandomGenerator.Randomize();
+        
         Tree tree = new Tree(RandomGenerator);
 
         // Select random Position
+        RandomGenerator.Randomize();
         int x = RandomGenerator.RandiRange(0, 15);
+        RandomGenerator.Randomize();
         int z = RandomGenerator.RandiRange(0, 15);
 
         // Get highest vox at x, y. Starting from the sky until it finds something.
@@ -176,7 +188,6 @@ public class Chunk : Object
                 return;
             }
         }
-
     }
 
 
