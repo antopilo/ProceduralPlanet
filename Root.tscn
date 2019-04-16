@@ -8,7 +8,6 @@
 [node name="Camera" type="Camera" parent="."]
 transform = Transform( 0.0598216, -0.97957, 0.192, 0.0401194, 0.194549, 0.980072, -0.997403, -0.0509266, 0.0509379, 22.848, 160, 22.509 )
 doppler_tracking = 2
-projection = 1
 current = true
 fov = 90.0
 size = 306.54
@@ -20,7 +19,6 @@ max_speed = Vector3( 50, 50, 50 )
 
 [node name="Generator" type="Node" parent="."]
 script = ExtResource( 2 )
-UpdateRate = 5.0
 
 [node name="Sun" type="DirectionalLight" parent="."]
 transform = Transform( 0.0672027, 0.670175, -0.739154, -0.197632, 0.735091, 0.648523, 0.97797, 0.102498, 0.181848, 0, 0, 0 )

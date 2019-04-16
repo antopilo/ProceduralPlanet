@@ -1,7 +1,6 @@
 using Godot;
 using System.Collections.Generic;
-
-
+using System.Linq;
 
 public class Generator : Node
 {
@@ -16,15 +15,16 @@ public class Generator : Node
     private SpatialMaterial WaterMaterial;
 
     private static Vector3 ChunkSize = new Vector3(16, 256, 16);
-
+    Chunk c1; 
+   
     [Export] private int RenderDistance = 5;
-    [Export] private int PreloadDistance = 16;
+    [Export] private int PreloadDistance = 8;
 
     // Chunks
     private Dictionary<Vector2, Chunk> LoadedChunks = new Dictionary<Vector2, Chunk>();
     private Dictionary<Vector2, Chunk> PreloadedChunks = new Dictionary<Vector2, Chunk>();
 
-    private Thread Thread;
+    private System.Threading.Thread Thread;
 
     // Water
     private MeshInstance Water;
@@ -46,7 +46,6 @@ public class Generator : Node
                                    new Vector3(1, 1, 0),
                                    new Vector3(1, 1, 1),
                                    new Vector3(0, 1, 1) };
-    private Thread[] Threads = new Thread[4];
 
 
     // Called when the node enters the scene tree for the first time.
@@ -58,7 +57,8 @@ public class Generator : Node
         WaterMaterial = ResourceLoader.Load("res://material/water.tres") as SpatialMaterial;
 
         GenerateSeed();
-
+        c1 = new Chunk(new Vector2(0, 0), Noise);
+        c1.Offset = new Vector2(0, 0);
         // Water
         Water = new MeshInstance();
         WaterMesh = new PlaneMesh();
@@ -67,51 +67,50 @@ public class Generator : Node
         Water.SetMesh(WaterMesh);
         Water.Translation = new Vector3(0, WaterLevel - WaterOffset, 0);
         AddChild(Water);
-
-        // Preload();
+        Preload();
 
 
     }
 
     public void Preload()
     {
-        for (int x = -PreloadDistance; x < PreloadDistance; x++)
+        Thread = new System.Threading.Thread(new System.Threading.ThreadStart(EndPreload));
+        Thread.Priority = System.Threading.ThreadPriority.Highest;
+        Thread.Start();
+        
+        
+    }
+
+    public void EndPreload()
+    {
+        while (true)
         {
-            for (int z = -PreloadDistance; z < PreloadDistance; z++)
-            {
-                Chunk c1 = new Chunk(new Vector2(x, z), Noise);
-                c1.Offset = new Vector2(x, z);
-                c1.Voxels = GetChunkData(c1.Offset);
-                PreloadedChunks.Add(c1.Offset, c1);
-            }
+            int count = 0;
+            int camX = int.Parse(Mathf.Stepify(Camera.Transform.origin.x / ChunkSize.x, 1).ToString());
+            int camZ = int.Parse(Mathf.Stepify(Camera.Transform.origin.z / ChunkSize.z, 1).ToString());
+            for (int x = -RenderDistance + camX; x < RenderDistance + camX; x++)
+                for (int z = -RenderDistance + camZ; z < RenderDistance + camZ; z++)
+                    if (!LoadedChunks.ContainsKey(new Vector2(x, z)) && !PreloadedChunks.ContainsKey(new Vector2(x, z)) && count < 8)
+                    {
+                        //count++;
+                        Chunk c1 = new Chunk(new Vector2(x, z), Noise);
+                        c1.Offset = new Vector2(x, z);
+                        c1.Voxels = GetChunkData(c1.Offset);
+                        
+                        if (rng.Randi() % 100 < 25)
+                        {
+                            c1.PlaceTrees();
+                        }
+                        PreloadedChunks.Add(c1.Offset, c1);
+                    }
         }
     }
 
 
     public override void _Process(float delta)
     {
-        int count = 0;
-        int camX = int.Parse(Mathf.Stepify(Camera.Transform.origin.x / ChunkSize.x, 1).ToString());
-        int camZ = int.Parse(Mathf.Stepify(Camera.Transform.origin.z / ChunkSize.z, 1).ToString());
-        for (int x = -RenderDistance + camX; x < RenderDistance + camX; x++)
-            for (int z = -RenderDistance + camZ; z < RenderDistance + camZ; z++)
-                if (!LoadedChunks.ContainsKey(new Vector2(x, z)) && !PreloadedChunks.ContainsKey(new Vector2(x, z)) && count < 8)
-                {
-                    //count++;
-                    Chunk c1 = new Chunk(new Vector2(x, z), Noise);
-                    c1.Offset = new Vector2(x, z);
-                    c1.Voxels = GetChunkData(c1.Offset);
-                    if (rng.Randi() % 100 < 25)
-                    {
-                        c1.MakeBoulder(new Vector3(rng.Randi() % ChunkSize.x, rng.Randi() % ChunkSize.y, rng.Randi() % ChunkSize.z));
-                    }
-                    if (rng.Randi() % 100 < 25)
-                    {
-                        c1.PlaceTrees();
-                    }
-                    PreloadedChunks.Add(c1.Offset, c1);
-                }
-                      
+
+       
    
         if (tick < UpdateRate)
         {
@@ -142,14 +141,14 @@ public class Generator : Node
 
         // Noise.Lacunarity = 0.25f;
         Noise.Seed = CurrentSeed;
-        Noise.Octaves = 5;
-        Noise.Period = 512;
+        Noise.Octaves = 4;
+        Noise.Period = 1024;
         Noise.Persistence = 0.8f;
 
         Noise2.Seed = CurrentSeed;
-        Noise2.Octaves = 3;
-        Noise2.Period = 256;
-        Noise2.Persistence = 0.9f;
+        Noise2.Octaves = 5;
+        Noise2.Period = 512;
+        Noise2.Persistence = 0.7f;
     }
 
     private void Render(Chunk pChunk)
@@ -174,12 +173,12 @@ public class Generator : Node
 
         AddChild(chunk);
 
-        //Tween t = new Tween();
-        //AddChild(t);
-        //t.InterpolateProperty(chunk, "scale", new Vector3(0, 0, 0), new Vector3(1, 1, 1), 2f, Tween.TransitionType.Expo, Tween.EaseType.Out);
-        //t.InterpolateProperty(chunk, "translation", chunk.Translation - new Vector3(0,255 * 2,0), chunk.Translation, 2f, Tween.TransitionType.Expo, Tween.EaseType.Out);
-        //chunk.Scale = new Vector3(0, 0, 0);
-        //t.Start();
+        Tween t = new Tween();
+        AddChild(t);
+        t.InterpolateProperty(chunk, "scale", new Vector3(0, 0, 0), new Vector3(1, 1, 1), 2f, Tween.TransitionType.Expo, Tween.EaseType.Out);
+        t.InterpolateProperty(chunk, "translation", chunk.Translation - new Vector3(0, 255 * 2, 0), chunk.Translation, 2f, Tween.TransitionType.Expo, Tween.EaseType.Out);
+        chunk.Scale = new Vector3(0, 0, 0);
+        t.Start();
 
         if (!LoadedChunks.ContainsKey(pChunk.Offset))
             LoadedChunks.Add(pChunk.Offset, pChunk);
@@ -338,7 +337,7 @@ public class Generator : Node
     }
 
 
-    public static Dictionary<Vector3, Voxel> GetChunkData(Vector2 chunkPosition)
+    public Dictionary<Vector3, Voxel> GetChunkData(Vector2 chunkPosition)
     {
         var Voxels = new Dictionary<Vector3, Voxel>();
         var Offset = chunkPosition;
@@ -364,8 +363,8 @@ public class Generator : Node
                     voxel.Position.y = i;
                     Voxels.Add(voxel.Position, voxel);
                 }
-               
 
+                bool topped = false;
                 #region 3D Noise, very expensive.
                 for (int y = int.Parse(height.ToString()); y < int.Parse(ChunkSize.y.ToString()); y++)
                 {
@@ -374,18 +373,20 @@ public class Generator : Node
                     if (Voxels.ContainsKey(positionAir)) // Skip ground 0 vox place earlier.
                         continue;
 
-                    Vector3 OffsetGlobal = new Vector3(Offset.x * ChunkSize.x, 0, Offset.y * ChunkSize.z) ; // Global position in noise.
+                    Vector3 OffsetGlobal = new Vector3(Offset.x * ChunkSize.x, 0, Offset.y * ChunkSize.z); // Global position in noise.
                     float density = Noise2.GetNoise3dv(positionAir + OffsetGlobal); // Density in the noise.
                     float densityUp = Noise2.GetNoise3dv(positionAir + OffsetGlobal + new Vector3(0, 1, 0));
-                    if (density >= 0)
+                    float DensityModifier = ((y / 4 / ChunkSize.y) * 2);
+                    // GD.Print(DensityModifier);
+                    if (density - DensityModifier >= 0 && densityUp >= density)
                     {
                         Vector3 voxelPosition;
                         height += 1;
                         voxelPosition = new Vector3(x, y, z);
 
-                        // while pulling down the bubles pos might be on existing vox.
+                        // while pulling down the bubbles pos might be on existing vox.
                         voxel.Position = voxelPosition;
-                        if (densityUp <= 0 )
+                        if (densityUp <= 0)
                             voxel.type = BlockType.grass;
                         else
                             voxel.type = BlockType.rock;
@@ -396,6 +397,20 @@ public class Generator : Node
                         if (!Voxels.ContainsKey(voxel.Position))
                             Voxels.Add(voxel.Position, voxel);
 
+                    }
+                    else if (!topped)
+                    {
+                        topped = true;
+                        Vector3 voxelPosition;
+                        voxelPosition = new Vector3(x, y, z);
+
+                        // while pulling down the bubles pos might be on existing vox.
+                        voxel.Position = voxelPosition;
+
+                        voxel.type = BlockType.grass;
+
+                        if (!Voxels.ContainsKey(voxel.Position))
+                            Voxels.Add(voxel.Position, voxel);
                     }
                 }
                 #endregion // Disabled for now.
