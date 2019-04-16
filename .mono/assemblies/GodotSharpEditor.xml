@@ -894,6 +894,10 @@
             <summary>
             </summary>
         </member>
+        <member name="M:Godot.EditorProperty.EmitChanged(System.String,System.Object,System.String,System.Boolean)">
+            <summary>
+            </summary>
+        </member>
         <member name="M:Godot.EditorResourceConversionPlugin._Convert(Godot.Resource)">
             <summary>
             </summary>
@@ -1218,7 +1222,7 @@
         </member>
         <member name="T:Godot.EditorSpatialGizmo">
             <summary>
-            Custom gizmo that is used for providing custom visualization and editing (handles) for 3D Spatial objects. These are created by [method EditorSpatialGizmoPlugin.create_gizmo].
+            Custom gizmo that is used for providing custom visualization and editing (handles) for 3D Spatial objects. See [EditorSpatialGizmoPlugin] for more information.
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmo.CommitHandle(System.Int32,System.Object,System.Boolean)">
@@ -1235,7 +1239,12 @@
         </member>
         <member name="M:Godot.EditorSpatialGizmo.GetHandleValue(System.Int32)">
             <summary>
-            Get actual value of a handle. This value can be anything and used for eventually undoing the motion when calling [method commit_handle]
+            Get actual value of a handle. This value can be anything and used for eventually undoing the motion when calling [method commit_handle].
+            </summary>
+        </member>
+        <member name="M:Godot.EditorSpatialGizmo.IsHandleHighlighted(System.Int32)">
+            <summary>
+            Get whether a handle is highlighted or not.
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmo.Redraw">
@@ -1254,7 +1263,7 @@
             Add lines to the gizmo (as sets of 2 points), with a given material. The lines are used for visualizing the gizmo. Call this function during [method redraw].
             </summary>
         </member>
-        <member name="M:Godot.EditorSpatialGizmo.AddMesh(Godot.ArrayMesh,System.Boolean,Godot.RID)">
+        <member name="M:Godot.EditorSpatialGizmo.AddMesh(Godot.ArrayMesh,System.Boolean,Godot.RID,Godot.Material)">
             <summary>
             &lt;param name="skeleton"&gt;If the param is null, then the default value is new RID()&lt;/param&gt;
             </summary>
@@ -1283,6 +1292,16 @@
             <summary>
             </summary>
         </member>
+        <member name="M:Godot.EditorSpatialGizmo.GetSpatialNode">
+            <summary>
+            Returns the Spatial node associated with this gizmo.
+            </summary>
+        </member>
+        <member name="M:Godot.EditorSpatialGizmo.GetPlugin">
+            <summary>
+            Return the [EditorSpatialGizmoPlugin] that owns this gizmo. It's useful to retrieve materials using [method EditorSpatialGizmoPlugin.get_material].
+            </summary>
+        </member>
         <member name="M:Godot.EditorSpatialGizmo.Clear">
             <summary>
             </summary>
@@ -1291,69 +1310,94 @@
             <summary>
             </summary>
         </member>
+        <member name="T:Godot.EditorSpatialGizmoPlugin">
+            <summary>
+            EditorSpatialGizmoPlugin allows you to define a new type of Gizmo. There are two main ways to do so: extending [EditorSpatialGizmoPlugin] for the simpler gizmos, or creating a new [EditorSpatialGizmo] type. See the tutorial in the documentation for more info.
+            </summary>
+        </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.CanBeHidden">
             <summary>
+            Override this method to define whether the gizmo can be hidden or not. Defaults to true.
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.CommitHandle(Godot.EditorSpatialGizmo,System.Int32,System.Object,System.Boolean)">
             <summary>
+            Override this method to commit gizmo handles. Called for this plugin's active gizmos.
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.CreateGizmo(Godot.Spatial)">
             <summary>
+            Override this method to return a custom [EditorSpatialGizmo] for the spatial nodes of your choice, return [code]null[/code] for the rest of nodes. (See also [method has_gizmo])
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.GetHandleName(Godot.EditorSpatialGizmo,System.Int32)">
             <summary>
+            Override this method to provide gizmo's handle names. Called for this plugin's active gizmos.
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.GetHandleValue(Godot.EditorSpatialGizmo,System.Int32)">
             <summary>
+            Get actual value of a handle from gizmo. Called for this plugin's active gizmos.
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.GetName">
+            <summary>
+            Override this method to provide the name that will appear in the gizmo visibility menu.
+            </summary>
+        </member>
+        <member name="M:Godot.EditorSpatialGizmoPlugin.GetPriority">
             <summary>
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.HasGizmo(Godot.Spatial)">
             <summary>
+            Override this method to define which Spatial nodes have a gizmo from this plugin. Whenever a [Spatial] node is added to a scene this method is called, if it returns [code]true[/code] the node gets a generic [EditorSpatialGizmo] assigned and is added to this plugin's list of active gizmos.
             </summary>
         </member>
-        <member name="M:Godot.EditorSpatialGizmoPlugin.IsGizmoHandleHighlighted(Godot.EditorSpatialGizmo,System.Int32)">
+        <member name="M:Godot.EditorSpatialGizmoPlugin.IsHandleHighlighted(Godot.EditorSpatialGizmo,System.Int32)">
             <summary>
+            Get whether a handle is highlighted or not. Called for this plugin's active gizmos.
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.IsSelectableWhenHidden">
             <summary>
+            Override this method to define whether Spatial with this gizmo should be selecteble even when the gizmo is hidden.
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.Redraw(Godot.EditorSpatialGizmo)">
             <summary>
+            Callback to redraw the provided gizmo. Called for this plugin's active gizmos.
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.SetHandle(Godot.EditorSpatialGizmo,System.Int32,Godot.Camera,Godot.Vector2)">
             <summary>
+            Update the value of a handle after it has been updated. Called for this plugin's active gizmos.
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.CreateMaterial(System.String,Godot.Color,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
+            Creates an unshaded material with its variants (selected and/or editable) and adds them to the internal material list. They can then be accessed with [method get_material] and used in [method EditorSpatialGizmo.add_mesh] and [method EditorSpatialGizmo.add_lines]. Should not be overridden.
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.CreateIconMaterial(System.String,Godot.Texture,System.Boolean,System.Nullable{Godot.Color})">
             <summary>
+            Creates an icon material with its variants (selected and/or editable) and adds them to the internal material list. They can then be accessed with [method get_material] and used in [method EditorSpatialGizmo.add_unscaled_billboard]. Should not be overridden.
             &lt;param name="color"&gt;If the param is null, then the default value is new Color(1, 1, 1, 1)&lt;/param&gt;
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.CreateHandleMaterial(System.String,System.Boolean)">
             <summary>
+            Creates a handle material with its variants (selected and/or editable) and adds them to the internal material list. They can then be accessed with [method get_material] and used in [method EditorSpatialGizmo.add_handles]. Should not be overridden.
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.AddMaterial(System.String,Godot.SpatialMaterial)">
             <summary>
+            Adds a new material to the internal material list for the plugin. It can then be accessed with [method get_material]. Should not be overridden.
             </summary>
         </member>
         <member name="M:Godot.EditorSpatialGizmoPlugin.GetMaterial(System.String,Godot.EditorSpatialGizmo)">
             <summary>
+            Get material from the internal list of materials. If an [EditorSpatialGizmo] is provided it will try to get the corresponding variant (selected and/or editable).
             </summary>
         </member>
         <member name="T:Godot.ScriptCreateDialog">

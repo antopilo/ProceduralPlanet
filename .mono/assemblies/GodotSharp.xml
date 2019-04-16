@@ -4,6 +4,24 @@
         <name>GodotSharp</name>
     </assembly>
     <members>
+        <member name="P:Godot.Basis.x">
+            <summary>
+            Returns the basis matrix’s x vector.
+            This is equivalent to <see cref="P:Godot.Basis.Column0"/>.
+            </summary>
+        </member>
+        <member name="P:Godot.Basis.y">
+            <summary>
+            Returns the basis matrix’s y vector.
+            This is equivalent to <see cref="P:Godot.Basis.Column1"/>.
+            </summary>
+        </member>
+        <member name="P:Godot.Basis.z">
+            <summary>
+            Returns the basis matrix’s z vector.
+            This is equivalent to <see cref="P:Godot.Basis.Column2"/>.
+            </summary>
+        </member>
         <member name="T:Godot.Node">
             <summary>
             Nodes are Godot's building blocks. They can be assigned as the child of another node, resulting in a tree arrangement. A given node can contain any number of nodes as children with the requirement that all siblings (direct children of a node) should have unique names.
@@ -290,6 +308,11 @@
             get_node("../Swamp/Alligator")
             get_node("/root/MyGame")
             [/codeblock]
+            </summary>
+        </member>
+        <member name="M:Godot.Node.GetNodeOrNull(Godot.NodePath)">
+            <summary>
+            Similar to [method get_node], but does not raise an error when [code]path[/code] does not point to a valid [code]Node[/code].
             </summary>
         </member>
         <member name="M:Godot.Node.GetParent">
@@ -3454,28 +3477,55 @@
             Return true if an animation if currently being played.
             </summary>
         </member>
+        <member name="T:Godot.AnimatedTexture">
+            <summary>
+            [code]AnimatedTexture[/code] is a resource format for simple frame-based animations, where multiple frames textures can be chained automatically with a predefined delay for each frame. It's not a [Node], contrarily to [AnimationPlayer] or [AnimatedSprite], but has the advantage of being usable at any place where a [Texture] resource can be used, e.g. in a [TileSet].
+            The playback of the animation is controlled by the [member fps] property as well as each frame's optional delay (see [method set_frame_delay]). The animation loops, i.e. it will restart at frame 0 automatically after playing the last frame.
+            [code]AnimatedTexture[/code] currently requires all frame textures to have the same size, otherwise the bigger ones will be cropped to match the smallest one.
+            </summary>
+        </member>
+        <member name="F:Godot.AnimatedTexture.MaxFrames">
+            <summary>
+            The maximum number of frames supported by [code]AnimatedTexture[/code]. If you need more frames in your animation, use [AnimationPlayer] or [AnimatedSprite].
+            </summary>
+        </member>
         <member name="P:Godot.AnimatedTexture.Frames">
             <summary>
+            Number of frames to use in the animation. While you can create the frames independently with [method set_frame_texture], you need to set this value for the animation to take new frames into account. The maximum number of frames is [constant MAX_FRAMES]. Default value: 1.
             </summary>
         </member>
         <member name="P:Godot.AnimatedTexture.Fps">
             <summary>
+            Number of frames per second. This value defines the default time interval between two frames of the animation, and thus the overall duration of the animation loop based on the [member frames] property. A value of 0 means no predefined number of frames per second, the animation will play according to each frame's frame delay (see [method set_frame_delay]). Default value: 4.
+            For example, an animation with 8 frames, no frame delay and a [code]fps[/code] value of 2 will run over 4 seconds, with one frame each 0.5 seconds.
             </summary>
         </member>
         <member name="M:Godot.AnimatedTexture.SetFrameTexture(System.Int32,Godot.Texture)">
             <summary>
+            Assigns a [Texture] to the given [code]frame[/code] ID. IDs start at 0 (so the first frame has ID 0, and the last frame of the animation has ID [member frames] - 1).
+            You can define any frame texture up to [constant MAX_FRAMES], but keep in mind that only frames from 0 to [member frames] - 1 will be part of the animation.
             </summary>
         </member>
         <member name="M:Godot.AnimatedTexture.GetFrameTexture(System.Int32)">
             <summary>
+            Retrieves the [Texture] assigned to the given [code]frame[/code] ID.
             </summary>
         </member>
         <member name="M:Godot.AnimatedTexture.SetFrameDelay(System.Int32,System.Single)">
             <summary>
+            Defines an additional delay (in seconds) between this frame and the next one, that will be added to the time interval defined by [member fps]. By default, frames have no delay defined. If a delay value is defined, the final time interval between this frame and the next will be [code]1.0 / fps + delay[/code].
+            For example, for an animation with 3 frames, 2 FPS and a frame delay on the second frame of 1.2, the resulting playback will be:
+            [codeblock]
+            Frame 0: 0.5 s (1 / fps)
+            Frame 1: 1.7 s (1 / fps + 1.2)
+            Frame 2: 0.5 s (1 / fps)
+            Total duration: 2.7 s
+            [/codeblock]
             </summary>
         </member>
         <member name="M:Godot.AnimatedTexture.GetFrameDelay(System.Int32)">
             <summary>
+            Retrieves the delayed assigned to the given [code]frame[/code] ID.
             </summary>
         </member>
         <member name="T:Godot.Animation">
@@ -4746,16 +4796,19 @@
         <member name="M:Godot.AnimationPlayer.Play(System.String,System.Single,System.Single,System.Boolean)">
             <summary>
             Play the animation with key [code]name[/code]. Custom speed and blend times can be set. If custom speed is negative (-1), 'from_end' being true can play the animation backwards.
+            If the animation has been paused by [code]stop(true)[/code] it will be resumed. Calling [code]play()[/code] without arguments will also resume the animation.
             </summary>
         </member>
         <member name="M:Godot.AnimationPlayer.PlayBackwards(System.String,System.Single)">
             <summary>
             Play the animation with key [code]name[/code] in reverse.
+            If the animation has been paused by [code]stop(true)[/code] it will be resumed backwards. Calling [code]play_backwards()[/code] without arguments will also resume the animation backwards.
             </summary>
         </member>
         <member name="M:Godot.AnimationPlayer.Stop(System.Boolean)">
             <summary>
-            Stop the currently playing animation. If [code]reset[/code] is [code]true[/code], the anim position is reset to [code]0[/code].
+            Stop the currently playing animation. If [code]reset[/code] is [code]true[/code], the animation position is reset to [code]0[/code] and the playback speed is reset to [code]1.0[/code].
+            If [code]reset[/code] is [code]false[/code], then calling [code]play()[/code] without arguments or [code]play("same_as_before")[/code] will resume the animation. Works the same for the [code]play_backwards()[/code] method.
             </summary>
         </member>
         <member name="M:Godot.AnimationPlayer.IsPlaying">
@@ -4794,12 +4847,12 @@
         </member>
         <member name="M:Godot.AnimationPlayer.Seek(System.Single,System.Boolean)">
             <summary>
-            Seek the animation to the [code]seconds[/code] point in time (in seconds). If [code]update[/code] is [code]true[/code], the animation updates too, otherwise it updates at process time.
+            Seek the animation to the [code]seconds[/code] point in time (in seconds). If [code]update[/code] is [code]true[/code], the animation updates too, otherwise it updates at process time. Events between the current frame and [code]seconds[/code] are skipped.
             </summary>
         </member>
         <member name="M:Godot.AnimationPlayer.Advance(System.Single)">
             <summary>
-            Shifts position in the animation timeline. Delta is the time in seconds to shift.
+            Shifts position in the animation timeline. Delta is the time in seconds to shift. Events between the current frame and [code]delta[/code] are handled.
             </summary>
         </member>
         <member name="F:Godot.AnimationTree.AnimationProcessMode.Physics">
@@ -5221,7 +5274,7 @@
         </member>
         <member name="M:Godot.AnimationTreePlayer.Advance(System.Single)">
             <summary>
-            Shifts position in the animation timeline. Delta is the time in seconds to shift.
+            Shifts position in the animation timeline. Delta is the time in seconds to shift. Events between the current frame and [code]delta[/code] are handled.
             </summary>
         </member>
         <member name="M:Godot.AnimationTreePlayer.Reset">
@@ -5745,11 +5798,6 @@
         <member name="M:Godot.ArrayMesh.SurfaceGetName(System.Int32)">
             <summary>
             Get the name assigned to this surface.
-            </summary>
-        </member>
-        <member name="M:Godot.ArrayMesh.CenterGeometry">
-            <summary>
-            Centers the geometry.
             </summary>
         </member>
         <member name="M:Godot.ArrayMesh.RegenNormalmaps">
@@ -6364,7 +6412,7 @@
         </member>
         <member name="T:Godot.AudioBusLayout">
             <summary>
-            Stores position, muting, solo, bypass, effects, effect position, volume, and the connections between busses. See [AudioServer] for usage.
+            Stores position, muting, solo, bypass, effects, effect position, volume, and the connections between buses. See [AudioServer] for usage.
             </summary>
         </member>
         <member name="T:Godot.AudioEffect">
@@ -6824,7 +6872,7 @@
         </member>
         <member name="T:Godot.AudioEffectLimiter">
             <summary>
-            A limiter is similar to a compressor, but it’s less flexible and designed to disallow sound going over a given dB threshold. Adding one in the Master Bus is always recommended to reduce the effects of clipping.
+            A limiter is similar to a compressor, but it's less flexible and designed to disallow sound going over a given dB threshold. Adding one in the Master Bus is always recommended to reduce the effects of clipping.
             Soft clipping starts to reduce the peaks a little below the threshold level and progressively increases its effect as the input level increases such that the threshold is never exceeded.
             </summary>
         </member>
@@ -7006,12 +7054,12 @@
         </member>
         <member name="M:Godot.AudioServer.SetBusCount(System.Int32)">
             <summary>
-            Adds and removes busses to make the number of busses match [code]amount[/code].
+            Adds and removes buses to make the number of buses match [code]amount[/code].
             </summary>
         </member>
         <member name="M:Godot.AudioServer.GetBusCount">
             <summary>
-            Returns the number of available busses.
+            Returns the number of available buses.
             </summary>
         </member>
         <member name="M:Godot.AudioServer.RemoveBus(System.Int32)">
@@ -7195,7 +7243,7 @@
         </member>
         <member name="M:Godot.AudioServer.GenerateBusLayout">
             <summary>
-            Generates an [AudioBusLayout] using the available busses and effects.
+            Generates an [AudioBusLayout] using the available buses and effects.
             </summary>
         </member>
         <member name="T:Godot.AudioStream">
@@ -7635,6 +7683,8 @@
         </member>
         <member name="M:Godot.AudioStreamSample.SaveToWav(System.String)">
             <summary>
+            Saves the AudioStreamSample as a WAV file to [code]path[/code]. Samples with IMA ADPCM format can't be saved.
+            Note that a [code].wav[/code] extension is automatically appended to [code]path[/code] if it is missing.
             </summary>
         </member>
         <member name="T:Godot.BackBufferCopy">
@@ -8321,6 +8371,10 @@
         <member name="M:Godot.Camera.GetCameraTransform">
             <summary>
             Gets the camera transform. Subclassed cameras (such as CharacterCamera) may provide different transforms than the [Node] transform.
+            </summary>
+        </member>
+        <member name="M:Godot.Camera.GetFrustum">
+            <summary>
             </summary>
         </member>
         <member name="M:Godot.Camera.SetCullMaskBit(System.Int32,System.Boolean)">
@@ -9390,6 +9444,14 @@
             Returns [code]true[/code] if collisions for the shape owner originating from this [code]CollisionObject2D[/code] will not be reported to collided with [code]CollisionObject2D[/code]s.
             </summary>
         </member>
+        <member name="M:Godot.CollisionObject2D.ShapeOwnerSetOneWayCollisionMargin(System.Int32,System.Single)">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:Godot.CollisionObject2D.GetShapeOwnerOneWayCollisionMargin(System.Int32)">
+            <summary>
+            </summary>
+        </member>
         <member name="M:Godot.CollisionObject2D.ShapeOwnerAddShape(System.Int32,Godot.Shape2D)">
             <summary>
             Adds a [Shape2D] to the shape owner.
@@ -9442,7 +9504,7 @@
         </member>
         <member name="P:Godot.CollisionPolygon.Polygon">
             <summary>
-            Array of vertices which define the polygon.
+            Array of vertices which define the polygon. Note that the returned value is a copy of the original. Methods which mutate the size or properties of the return value will not impact the original polygon. To change properties of the polygon, assign it to a temporary variable and make changes before reassigning the [code]polygon[/code] member.
             </summary>
         </member>
         <member name="T:Godot.CollisionPolygon2D">
@@ -9467,7 +9529,7 @@
         </member>
         <member name="P:Godot.CollisionPolygon2D.Polygon">
             <summary>
-            The polygon's list of vertices. The final point will be connected to the first.
+            The polygon's list of vertices. The final point will be connected to the first. The returned value is a clone of the PoolVector2Array, not a reference.
             </summary>
         </member>
         <member name="P:Godot.CollisionPolygon2D.Disabled">
@@ -9478,6 +9540,10 @@
         <member name="P:Godot.CollisionPolygon2D.OneWayCollision">
             <summary>
             If [code]true[/code], only edges that face up, relative to CollisionPolygon2D's rotation, will collide with other objects.
+            </summary>
+        </member>
+        <member name="P:Godot.CollisionPolygon2D.OneWayCollisionMargin">
+            <summary>
             </summary>
         </member>
         <member name="T:Godot.CollisionShape">
@@ -9523,6 +9589,10 @@
         <member name="P:Godot.CollisionShape2D.OneWayCollision">
             <summary>
             Sets whether this collision shape should only detect collision on one side (top or bottom).
+            </summary>
+        </member>
+        <member name="P:Godot.CollisionShape2D.OneWayCollisionMargin">
+            <summary>
             </summary>
         </member>
         <member name="T:Godot.ColorPicker">
@@ -9810,7 +9880,7 @@
             [b]User Interface nodes and input[/b]
             Godot sends input events to the scene's root node first, by calling [method Node._input]. [method Node._input] forwards the event down the node tree to the nodes under the mouse cursor, or on keyboard focus. To do so, it calls [method MainLoop._input_event]. Call [method accept_event] so no other node receives the event. Once you accepted an input, it becomes handled so [method Node._unhandled_input] will not process it.
             Only one [code]Control[/code] node can be in keyboard focus. Only the node in focus will receive keyboard events. To get the focus, call [method grab_focus]. [code]Control[/code] nodes lose focus when another node grabs it, or if you hide the node in focus.
-            Set [member mouse_filter] to MOUSE_FILTER_IGNORE to tell a [code]Control[/code] node to ignore mouse or touch events. You'll need it if you place an icon on top of a button.
+            Set [member mouse_filter] to [constant MOUSE_FILTER_IGNORE] to tell a [code]Control[/code] node to ignore mouse or touch events. You'll need it if you place an icon on top of a button.
             [Theme] resources change the Control's appearance. If you change the [Theme] on a [code]Control[/code] node, it affects all of its children. To override some of the theme's parameters, call one of the [code]add_*_override[/code] methods, like [method add_font_override]. You can override the theme with the inspector.
             </summary>
         </member>
@@ -10007,12 +10077,12 @@
         </member>
         <member name="F:Godot.Control.GrowDirection.End">
             <summary>
-            The control wil grow to the right or bottom to make up if its minimum size is changed to be greater than its current size on the respective axis.
+            The control will grow to the right or bottom to make up if its minimum size is changed to be greater than its current size on the respective axis.
             </summary>
         </member>
         <member name="F:Godot.Control.GrowDirection.Both">
             <summary>
-            The control wil grow in both directions equally to make up if its minimum size is changed to be greater than its current size.
+            The control will grow in both directions equally to make up if its minimum size is changed to be greater than its current size.
             </summary>
         </member>
         <member name="F:Godot.Control.SizeFlags.Fill">
@@ -10216,7 +10286,7 @@
         </member>
         <member name="P:Godot.Control.HintTooltip">
             <summary>
-            Changes the tooltip text. The tooltip appears when the user's mouse cursor stays idle over this control for a few moments.
+            Changes the tooltip text. The tooltip appears when the user's mouse cursor stays idle over this control for a few moments, provided that the [member mouse_filter] property is not [constant MOUSE_FILTER_IGNORE].
             </summary>
         </member>
         <member name="P:Godot.Control.FocusNeighbourLeft">
@@ -10925,6 +10995,7 @@
         </member>
         <member name="P:Godot.CPUParticles.ColorRamp">
             <summary>
+            Each particle's vertex color will vary along this [GradientTexture].
             </summary>
         </member>
         <member name="P:Godot.CPUParticles.HueVariation">
@@ -11553,6 +11624,10 @@
         <member name="M:Godot.CSGShape.GetCollisionLayerBit(System.Int32)">
             <summary>
             Returns an individual bit on the collision mask.
+            </summary>
+        </member>
+        <member name="M:Godot.CSGShape.GetMeshes">
+            <summary>
             </summary>
         </member>
         <member name="T:Godot.CSGSphere">
@@ -12614,9 +12689,17 @@
             "major"    - Holds the major version number as an int
             "minor"    - Holds the minor version number as an int
             "patch"    - Holds the patch version number as an int
+            "hex"      - Holds the full version number encoded as an hexadecimal int with one byte (2 places) per number (see example below)
             "status"   - Holds the status (e.g. "beta", "rc1", "rc2", ... "stable") as a String
             "build"    - Holds the build name (e.g. "custom-build") as a String
             "string"   - major + minor + patch + status + build in a single String
+            The "hex" value is encoded as follows, from left to right: one byte for the major, one byte for the minor, one byte for the patch version. For example, "3.1.12" would be [code]0x03010C[/code]. Note that it's still an int internally, and printing it will give you its decimal representation, which is not particularly meaningful. Use hexadecimal literals for easy version comparisons from code:
+            [codeblock]
+            if Engine.get_version_info().hex &gt;= 0x030200:
+            # do things specific to version 3.2 or later
+            else:
+            # do things specific to versions before 3.2
+            [/codeblock]
             </summary>
         </member>
         <member name="M:Godot.Engine.GetAuthorInfo">
@@ -13198,7 +13281,7 @@
             func _on_text_entered(command):
             var error = expression.parse(command, [])
             if error != OK:
-            print(get_error_text())
+            print(expression.get_error_text())
             return
             var result = expression.execute([], null, true)
             if not expression.has_execute_failed():
@@ -13209,12 +13292,14 @@
         <member name="M:Godot.Expression.Parse(System.String,System.String[])">
             <summary>
             Parses the expression and returns a [enum @GlobalScope.Error].
+            You can optionally specify names of variables that may appear in the expression with [code]input_names[/code], so that you can bind them when it gets executed.
             &lt;param name="inputNames"&gt;If the param is null, then the default value is new string[] {}&lt;/param&gt;
             </summary>
         </member>
         <member name="M:Godot.Expression.Execute(Godot.Collections.Array,Godot.Object,System.Boolean)">
             <summary>
             Executes the expression that was previously parsed by [method parse] and returns the result. Before you use the returned object, you should check if the method failed by calling [method has_execute_failed].
+            If you defined input variables in [method parse], you can specify their values in the inputs array, in the same order.
             &lt;param name="inputs"&gt;If the param is null, then the default value is new Godot.Collections.Array {}&lt;/param&gt;
             </summary>
         </member>
@@ -13355,7 +13440,7 @@
         </member>
         <member name="M:Godot.File.EofReached">
             <summary>
-            Returns [code]true[/code] if the file cursor has reached the end of the file.
+            Returns [code]true[/code] if the file cursor has read past the end of the file. Note that this function will still return [code]false[/code] while at the end of the file and only activates when reading past it. This can be confusing but it conforms to how low level file access works in all operating systems. There is always [method get_len] and [method get_position] to implement a custom logic.
             </summary>
         </member>
         <member name="M:Godot.File.Get8">
@@ -13506,6 +13591,7 @@
         <member name="M:Godot.File.FileExists(System.String)">
             <summary>
             Returns [code]true[/code] if the file exists in the given path.
+            Note that many resources types are imported (e.g. textures or sound files), and that their source asset will not be included in the exported game, as only the imported version is used (in the [code]res://.import[/code] folder). To check for the existence of such resources while taking into account the remapping to their imported location, use [method ResourceLoader.exists]. Typically, using [code]File.file_exists[/code] on an imported resource would work while you are developing in the editor (the source asset is present in [code]res://[/code], but fail when exported).
             </summary>
         </member>
         <member name="M:Godot.File.GetModifiedTime(System.String)">
@@ -13630,7 +13716,7 @@
         </member>
         <member name="T:Godot.Font">
             <summary>
-            Font contains a unicode compatible character set, as well as the ability to draw it with variable width, ascent, descent and kerning. For creating fonts from TTF files (or other font formats), see the editor support for fonts. TODO check wikipedia for graph of ascent/baseline/descent/height/etc.
+            Font contains a unicode compatible character set, as well as the ability to draw it with variable width, ascent, descent and kerning. For creating fonts from TTF files (or other font formats), see the editor support for fonts.
             </summary>
         </member>
         <member name="M:Godot.Font.Draw(Godot.RID,Godot.Vector2,System.String,System.Nullable{Godot.Color},System.Int32,System.Nullable{Godot.Color})">
@@ -15893,7 +15979,17 @@
         </member>
         <member name="T:Godot.Image">
             <summary>
-            Native image datatype. Contains image data, which can be converted to a [Texture], and several functions to interact with it. The maximum width and height for an [code]Image[/code] is 16384 pixels.
+            Native image datatype. Contains image data, which can be converted to a [Texture], and several functions to interact with it. The maximum width and height for an [code]Image[/code] are [constant MAX_WIDTH] and [constant MAX_HEIGHT].
+            </summary>
+        </member>
+        <member name="F:Godot.Image.MaxWidth">
+            <summary>
+            The maximal width allowed for [code]Image[/code] resources.
+            </summary>
+        </member>
+        <member name="F:Godot.Image.MaxHeight">
+            <summary>
+            The maximal height allowed for [code]Image[/code] resources.
             </summary>
         </member>
         <member name="F:Godot.Image.AlphaMode.None">
@@ -16174,7 +16270,7 @@
         </member>
         <member name="M:Godot.Image.GetFormat">
             <summary>
-            Returns the image’s format. See [code]FORMAT_*[/code] constants.
+            Returns the image's format. See [code]FORMAT_*[/code] constants.
             </summary>
         </member>
         <member name="M:Godot.Image.GetData">
@@ -16825,6 +16921,11 @@
             Feeds an [InputEvent] to the game. Can be used to artificially trigger input events from code.
             </summary>
         </member>
+        <member name="M:Godot.Input.SetUseAccumulatedInput(System.Boolean)">
+            <summary>
+            Whether to accumulate similar input events sent by the operating system. Defaults to [code]true[/code].
+            </summary>
+        </member>
         <member name="T:Godot.InputEvent">
             <summary>
             Base class of all sort of input event. See [method Node._input].
@@ -16876,6 +16977,10 @@
         <member name="M:Godot.InputEvent.IsActionType">
             <summary>
             Returns [code]true[/code] if this input event's type is one of the [code]InputEvent[/code] constants.
+            </summary>
+        </member>
+        <member name="M:Godot.InputEvent.Accumulate(Godot.InputEvent)">
+            <summary>
             </summary>
         </member>
         <member name="M:Godot.InputEvent.XformedBy(Godot.Transform2D,System.Nullable{Godot.Vector2})">
@@ -16968,6 +17073,38 @@
             </summary>
         </member>
         <member name="P:Godot.InputEventMagnifyGesture.Factor">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Godot.InputEventMIDI.Channel">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Godot.InputEventMIDI.Message">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Godot.InputEventMIDI.Pitch">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Godot.InputEventMIDI.Velocity">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Godot.InputEventMIDI.Instrument">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Godot.InputEventMIDI.Pressure">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Godot.InputEventMIDI.ControllerNumber">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Godot.InputEventMIDI.ControllerValue">
             <summary>
             </summary>
         </member>
@@ -17714,7 +17851,7 @@
             If the body is at least this close to another body, this body will consider them to be colliding.
             </summary>
         </member>
-        <member name="M:Godot.KinematicBody.MoveAndCollide(Godot.Vector3,System.Boolean,System.Boolean)">
+        <member name="M:Godot.KinematicBody.MoveAndCollide(Godot.Vector3,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
             Moves the body along the vector [code]rel_vec[/code]. The body will stop if it collides. Returns a [KinematicCollision], which contains information about the collision.
             If [code]test_only[/code] is [code]true[/code], the body does not move but the would-be collision information is given.
@@ -17725,7 +17862,7 @@
             Moves the body along a vector. If the body collides with another, it will slide along the other body rather than stop immediately. If the other body is a [code]KinematicBody[/code] or [RigidBody], it will also be affected by the motion of the other body. You can use this to make moving or rotating platforms, or to make nodes push other nodes.
             [code]linear_velocity[/code] is the velocity vector (typically meters per second). Unlike in [method move_and_collide], you should [i]not[/i] multiply it by [code]delta[/code] — the physics engine handles applying the velocity.
             [code]floor_normal[/code] is the up direction, used to determine what is a wall and what is a floor or a ceiling. If set to the default value of [code]Vector3(0, 0, 0)[/code], everything is considered a wall. This is useful for topdown games.
-            [i]TODO: Update for new stop_on_slode argument.[/i] If the body is standing on a slope and the horizontal speed (relative to the floor's speed) goes below [code]slope_stop_min_velocity[/code], the body will stop completely. This prevents the body from sliding down slopes when you include gravity in [code]linear_velocity[/code]. When set to lower values, the body will not be able to stand still on steep slopes.
+            If the body is standing on a slope and the horizontal speed (relative to the floor's speed) goes below [code]slope_stop_min_velocity[/code], the body will stop completely. This prevents the body from sliding down slopes when you include gravity in [code]linear_velocity[/code]. When set to lower values, the body will not be able to stand still on steep slopes.
             If the body collides, it will change direction a maximum of [code]max_slides[/code] times before it stops.
             [code]floor_max_angle[/code] is the maximum angle (in radians) where a slope is still considered a floor (or a ceiling), rather than a wall. The default value equals 45 degrees.
             Returns the movement that remained when the body stopped. To get more detailed information about collisions that occurred, use [method get_slide_collision].
@@ -17788,7 +17925,7 @@
         </member>
         <member name="P:Godot.KinematicBody2D.Motion__syncToPhysics">
             <summary>
-            If [code]true[/code], the body's movement will be synchronized to the physics frame. This is useful when animating movement via [AnimationPlayer], for example on moving platforms.
+            If [code]true[/code], the body's movement will be synchronized to the physics frame. This is useful when animating movement via [AnimationPlayer], for example on moving platforms. Do [b]not[/b] use together with [method move_and_slide] or [method move_and_collide] functions.
             </summary>
         </member>
         <member name="M:Godot.KinematicBody2D.MoveAndCollide(Godot.Vector2,System.Boolean,System.Boolean,System.Boolean)">
@@ -17801,7 +17938,7 @@
             Moves the body along a vector. If the body collides with another, it will slide along the other body rather than stop immediately. If the other body is a [code]KinematicBody2D[/code] or [RigidBody2D], it will also be affected by the motion of the other body. You can use this to make moving or rotating platforms, or to make nodes push other nodes.
             [code]linear_velocity[/code] is the velocity vector in pixels per second. Unlike in [method move_and_collide], you should [i]not[/i] multiply it by [code]delta[/code] — the physics engine handles applying the velocity.
             [code]floor_normal[/code] is the up direction, used to determine what is a wall and what is a floor or a ceiling. If set to the default value of [code]Vector2(0, 0)[/code], everything is considered a wall. This is useful for topdown games.
-            [i]TODO: Update for stop_on_slope argument.[/i] If the body is standing on a slope and the horizontal speed (relative to the floor's speed) goes below [code]slope_stop_min_velocity[/code], the body will stop completely. This prevents the body from sliding down slopes when you include gravity in [code]linear_velocity[/code]. When set to lower values, the body will not be able to stand still on steep slopes.
+            If the body is standing on a slope and the horizontal speed (relative to the floor's speed) goes below [code]slope_stop_min_velocity[/code], the body will stop completely. This prevents the body from sliding down slopes when you include gravity in [code]linear_velocity[/code]. When set to lower values, the body will not be able to stand still on steep slopes.
             If the body collides, it will change direction a maximum of [code]max_slides[/code] times before it stops.
             [code]floor_max_angle[/code] is the maximum angle (in radians) where a slope is still considered a floor (or a ceiling), rather than a wall. The default value equals 45 degrees.
             Returns the [code]linear_velocity[/code] vector, rotated and/or scaled if a slide collision occurred. To get more detailed information about collisions that occurred, use [method get_slide_collision].
@@ -17975,7 +18112,7 @@
         <member name="T:Godot.Label">
             <summary>
             Label displays plain text on the screen. It gives you control over the horizontal and vertical alignment, and can wrap the text inside the node's bounding rectangle. It doesn't support bold, italics or other formatting. For that, use [RichTextLabel] instead.
-            Note that contrarily to most other [Control]s, Label's [member Control.mouse_filter] defaults to MOUSE_FILTER_IGNORE (i.e. it doesn't react to mouse input events).
+            Note that contrarily to most other [Control]s, Label's [member Control.mouse_filter] defaults to MOUSE_FILTER_IGNORE (i.e. it doesn't react to mouse input events). This implies that a label won't display any configured [member Control.hint_tooltip], unless you change its mouse filter.
             </summary>
         </member>
         <member name="F:Godot.Label.AlignEnum.Left">
@@ -19632,62 +19769,75 @@
         </member>
         <member name="T:Godot.MultiMesh">
             <summary>
-            MultiMesh provides low level mesh instancing. If the amount of [Mesh] instances needed goes from hundreds to thousands (and most need to be visible at close proximity) creating such a large amount of [MeshInstance] nodes may affect performance by using too much CPU or video memory.
-            For this case a MultiMesh becomes very useful, as it can draw thousands of instances with little API overhead.
+            MultiMesh provides low level mesh instancing. Drawing thousands of [MeshInstance] nodes can be slow because each object is submitted to the GPU to be drawn individually.
+            MultiMesh is much faster because it can draw thousands of instances with a single draw call, resulting in less API overhead.
             As a drawback, if the instances are too far away of each other, performance may be reduced as every single instance will always rendered (they are spatially indexed as one, for the whole object).
             Since instances may have any behavior, the AABB used for visibility must be provided by the user.
             </summary>
         </member>
         <member name="F:Godot.MultiMesh.TransformFormatEnum.Transform2d">
             <summary>
+            Use this when using 2D transforms.
             </summary>
         </member>
         <member name="F:Godot.MultiMesh.TransformFormatEnum.Transform3d">
             <summary>
+            Use this when using 3D transforms.
             </summary>
         </member>
         <member name="F:Godot.MultiMesh.CustomDataFormatEnum.None">
             <summary>
+            Use when you are not using per-instance custom data.
             </summary>
         </member>
         <member name="F:Godot.MultiMesh.CustomDataFormatEnum.Data8bit">
             <summary>
+            Compress custom_data into 8 bits when passing to shader. This uses less memory and can be faster, but loses precision.
             </summary>
         </member>
         <member name="F:Godot.MultiMesh.CustomDataFormatEnum.Float">
             <summary>
+            The [Color] passed into [method set_instance_custom_data] will use 4 floats. Use this for highest precision.
             </summary>
         </member>
         <member name="F:Godot.MultiMesh.ColorFormatEnum.None">
             <summary>
+            Use when you are not using per-instance [Color]s.
             </summary>
         </member>
         <member name="F:Godot.MultiMesh.ColorFormatEnum.Color8bit">
             <summary>
+            Compress [Color] data into 8 bits when passing to shader. This uses less memory and can be faster, but the [Color] loses precision.
             </summary>
         </member>
         <member name="F:Godot.MultiMesh.ColorFormatEnum.Float">
             <summary>
+            The [Color] passed into [method set_instance_color] will use 4 floats. Use this for highest precision [Color].
             </summary>
         </member>
         <member name="P:Godot.MultiMesh.ColorFormat">
             <summary>
+            Format of colors in color array that gets passed to shader.
             </summary>
         </member>
         <member name="P:Godot.MultiMesh.TransformFormat">
             <summary>
+            Format of transform used to transform mesh, either 2D or 3D.
             </summary>
         </member>
         <member name="P:Godot.MultiMesh.CustomDataFormat">
             <summary>
+            Format of custom data in custom data array that gets passed to shader.
             </summary>
         </member>
         <member name="P:Godot.MultiMesh.InstanceCount">
             <summary>
+            Number of instances that will get drawn.
             </summary>
         </member>
         <member name="P:Godot.MultiMesh.Mesh">
             <summary>
+            Mesh to be drawn.
             </summary>
         </member>
         <member name="M:Godot.MultiMesh.SetInstanceTransform(System.Int32,Godot.Transform)">
@@ -19695,14 +19845,23 @@
             Set the transform for a specific instance.
             </summary>
         </member>
+        <member name="M:Godot.MultiMesh.SetInstanceTransform2d(System.Int32,Godot.Transform2D)">
+            <summary>
+            </summary>
+        </member>
         <member name="M:Godot.MultiMesh.GetInstanceTransform(System.Int32)">
             <summary>
             Return the transform of a specific instance.
             </summary>
         </member>
+        <member name="M:Godot.MultiMesh.GetInstanceTransform2d(System.Int32)">
+            <summary>
+            </summary>
+        </member>
         <member name="M:Godot.MultiMesh.SetInstanceColor(System.Int32,Godot.Color)">
             <summary>
             Set the color of a specific instance.
+            For the color to take effect, ensure that [member color_format] is non-[code]null[/code] on the [code]MultiMesh[/code] and [member SpatialMaterial.vertex_color_use_as_albedo] is [code]true[/code] on the material.
             </summary>
         </member>
         <member name="M:Godot.MultiMesh.GetInstanceColor(System.Int32)">
@@ -19712,10 +19871,12 @@
         </member>
         <member name="M:Godot.MultiMesh.SetInstanceCustomData(System.Int32,Godot.Color)">
             <summary>
+            Set custom data for a specific instance. Although [Color] is used, it is just a container for 4 numbers.
             </summary>
         </member>
         <member name="M:Godot.MultiMesh.GetInstanceCustomData(System.Int32)">
             <summary>
+            Return the custom data that has been set for a specific instance.
             </summary>
         </member>
         <member name="M:Godot.MultiMesh.GetAabb">
@@ -20264,7 +20425,7 @@
         </member>
         <member name="M:Godot.NetworkedMultiplayerENet.CreateClient(System.String,System.Int32,System.Int32,System.Int32,System.Int32)">
             <summary>
-            Create client that connects to a server at [code]address[/code] using specified [code]port[/code]. The given address needs to be either a fully qualified domain nome (e.g. [code]www.example.com[/code]) or an IP address in IPv4 or IPv6 format (e.g. [code]192.168.1.1[/code]). The [code]port[/code] is the port the server is listening on. The [code]in_bandwidth[/code] and [code]out_bandwidth[/code] parameters can be used to limit the incoming and outgoing bandwidth to the given number of bytes per second. The default of 0 means unlimited bandwidth. Note that ENet will strategically drop packets on specific sides of a connection between peers to ensure the peer's bandwidth is not overwhelmed. The bandwidth parameters also determine the window size of a connection which limits the amount of reliable packets that may be in transit at any given time. Returns [code]OK[/code] if a client was created, [code]ERR_ALREADY_IN_USE[/code] if this NetworkedMultiplayerEnet instance already has an open connection (in which case you need to call [method close_connection] first) or [code]ERR_CANT_CREATE[/code] if the client could not be created. If [code]client_port[/code] is specified, the client will also listen to the given port, this is useful in some NAT traversal technique.
+            Create client that connects to a server at [code]address[/code] using specified [code]port[/code]. The given address needs to be either a fully qualified domain name (e.g. [code]www.example.com[/code]) or an IP address in IPv4 or IPv6 format (e.g. [code]192.168.1.1[/code]). The [code]port[/code] is the port the server is listening on. The [code]in_bandwidth[/code] and [code]out_bandwidth[/code] parameters can be used to limit the incoming and outgoing bandwidth to the given number of bytes per second. The default of 0 means unlimited bandwidth. Note that ENet will strategically drop packets on specific sides of a connection between peers to ensure the peer's bandwidth is not overwhelmed. The bandwidth parameters also determine the window size of a connection which limits the amount of reliable packets that may be in transit at any given time. Returns [code]OK[/code] if a client was created, [code]ERR_ALREADY_IN_USE[/code] if this NetworkedMultiplayerEnet instance already has an open connection (in which case you need to call [method close_connection] first) or [code]ERR_CANT_CREATE[/code] if the client could not be created. If [code]client_port[/code] is specified, the client will also listen to the given port, this is useful in some NAT traversal technique.
             </summary>
         </member>
         <member name="M:Godot.NetworkedMultiplayerENet.CloseConnection(System.Int32)">
@@ -20594,6 +20755,10 @@
             If true, the resulting texture contains a normal map created from the original noise interpreted as a bump map.
             </summary>
         </member>
+        <member name="P:Godot.NoiseTexture.BumpStrength">
+            <summary>
+            </summary>
+        </member>
         <member name="P:Godot.NoiseTexture.Noise">
             <summary>
             The [OpenSimplexNoise] instance used to generate the noise.
@@ -20631,7 +20796,7 @@
         </member>
         <member name="P:Godot.OccluderPolygon2D.Polygon">
             <summary>
-            A [Vector2] array with the index for polygon's vertices positions.
+            A [Vector2] array with the index for polygon's vertices positions. Note that the returned value is a copy of the underlying array, rather than a reference.
             </summary>
         </member>
         <member name="T:Godot.OmniLight">
@@ -20807,7 +20972,12 @@
         </member>
         <member name="M:Godot.OptionButton.GetItemId(System.Int32)">
             <summary>
-            Return the ID of the item at index "idx".
+            Return the ID of the item at index [code]idx[/code].
+            </summary>
+        </member>
+        <member name="M:Godot.OptionButton.GetItemIndex(System.Int32)">
+            <summary>
+            Return the index of the item with the given [code]id[/code].
             </summary>
         </member>
         <member name="M:Godot.OptionButton.GetItemMetadata(System.Int32)">
@@ -20858,6 +21028,16 @@
         <member name="T:Godot.OS">
             <summary>
             Operating System functions. OS Wraps the most common functionality to communicate with the host Operating System, such as: mouse grabbing, mouse cursors, clipboard, video mode, date and time, timers, environment variables, execution of binaries, command line, etc.
+            </summary>
+        </member>
+        <member name="F:Godot.OS.VideoDriver.Gles2">
+            <summary>
+            The GLES2 rendering backend. It uses OpenGL ES 2.0 on mobile devices, OpenGL 2.1 on desktop platforms and WebGL 1.0 on the web.
+            </summary>
+        </member>
+        <member name="F:Godot.OS.VideoDriver.Gles3">
+            <summary>
+            The GLES3 rendering backend. It uses OpenGL ES 3.0 on mobile devices, OpenGL 3.3 on desktop platforms and WebGL 2.0 on the web.
             </summary>
         </member>
         <member name="F:Godot.OS.SystemDir.Desktop">
@@ -21131,10 +21311,17 @@
         </member>
         <member name="M:Godot.OS.GetVideoDriverCount">
             <summary>
+            Returns the number of video drivers supported on the current platform.
             </summary>
         </member>
-        <member name="M:Godot.OS.GetVideoDriverName(System.Int32)">
+        <member name="M:Godot.OS.GetVideoDriverName(Godot.OS.VideoDriver)">
             <summary>
+            Returns the name of the video driver matching the given [code]driver[/code] index. This index is a value from [enum OS.VideoDriver], and you can use [method get_current_video_driver] to get the current backend's index.
+            </summary>
+        </member>
+        <member name="M:Godot.OS.GetCurrentVideoDriver">
+            <summary>
+            Returns the currently used video driver, using one of the values from [enum OS.VideoDriver].
             </summary>
         </member>
         <member name="M:Godot.OS.GetAudioDriverCount">
@@ -21609,6 +21796,11 @@
         <member name="M:Godot.OS.GetPowerPercentLeft">
             <summary>
             Returns the amount of battery left in the device as a percentage.
+            </summary>
+        </member>
+        <member name="M:Godot.OS.RequestPermission(System.String)">
+            <summary>
+            At the moment this function is only used by [code]AudioDriverOpenSL[/code] to request permission for [code]RECORD_AUDIO[/code] on Android.
             </summary>
         </member>
         <member name="P:Godot.PackedDataContainer.__Data___">
@@ -23237,6 +23429,10 @@
             Constant to set/get the default solver bias for all physics constraints. A solver bias is a factor controlling how much two objects "rebound", after violating a constraint, to avoid leaving them in that state because of numerical imprecision.
             </summary>
         </member>
+        <member name="F:Godot.Physics2DServer.SpaceParameter.TestMotionMinContactDepth">
+            <summary>
+            </summary>
+        </member>
         <member name="F:Godot.Physics2DServer.JointType.Pin">
             <summary>
             Constant to create pin joints.
@@ -23690,6 +23886,11 @@
         <member name="M:Godot.Physics2DServer.BodySetShapeDisabled(Godot.RID,System.Int32,System.Boolean)">
             <summary>
             Disables shape in body if [code]disable[/code] is [code]true[/code].
+            </summary>
+        </member>
+        <member name="M:Godot.Physics2DServer.BodySetShapeAsOneWayCollision(Godot.RID,System.Int32,System.Boolean,System.Single)">
+            <summary>
+            Enables one way collision on body if [code]enable[/code] is [code]true[/code].
             </summary>
         </member>
         <member name="M:Godot.Physics2DServer.BodyAttachObjectInstanceId(Godot.RID,System.Int32)">
@@ -24191,7 +24392,7 @@
         </member>
         <member name="M:Godot.PhysicsDirectBodyState.ApplyImpulse(Godot.Vector3,Godot.Vector3)">
             <summary>
-            Apply a positioned impulse (which will be affected by the body mass and shape). This is the equivalent of hitting a billiard ball with a cue: a force that is applied once, and only once. Both the impulse and the position are in global coordinates, and the position is relative to the object's origin.
+            Applies a positioned impulse to the body. An impulse is time independent! Applying an impulse every frame would result in a framerate dependent force. For this reason it should only be used when simulating one-time impacts. The position uses the rotation of the global coordinate system, but is centered at the object's origin.
             </summary>
         </member>
         <member name="M:Godot.PhysicsDirectBodyState.ApplyTorqueImpulse(Godot.Vector3)">
@@ -24284,7 +24485,7 @@
         <member name="M:Godot.PhysicsDirectSpaceState.CastMotion(Godot.PhysicsShapeQueryParameters,Godot.Vector3)">
             <summary>
             Checks whether the shape can travel to a point. The method will return an array with two floats between 0 and 1, both representing a fraction of [code]motion[/code]. The first is how far the shape can move without triggering a collision, and the second is the point at which a collision will occur. If no collision is detected, the returned array will be [code][1, 1][/code].
-            If the shape can not move, the returned array will be [code][0, 0][/code].
+            If the shape can not move, the returned array will be [code][0, 0][/code] under Bullet, and empty under GodotPhysics.
             </summary>
         </member>
         <member name="M:Godot.PhysicsDirectSpaceState.CollideShape(Godot.PhysicsShapeQueryParameters,System.Int32)">
@@ -24505,6 +24706,10 @@
         <member name="F:Godot.PhysicsServer.SpaceParameter.ConstraintDefaultBias">
             <summary>
             Constant to set/get the default solver bias for all physics constraints. A solver bias is a factor controlling how much two objects "rebound", after violating a constraint, to avoid leaving them in that state because of numerical imprecision.
+            </summary>
+        </member>
+        <member name="F:Godot.PhysicsServer.SpaceParameter.TestMotionMinContactDepth">
+            <summary>
             </summary>
         </member>
         <member name="F:Godot.PhysicsServer.ConeTwistJointParam.SwingSpan">
@@ -25697,7 +25902,7 @@
         </member>
         <member name="P:Godot.Polygon2D.Polygon">
             <summary>
-            The polygon's list of vertices. The final point will be connected to the first.
+            The polygon's list of vertices. The final point will be connected to the first. Note that this returns a copy of the [PoolVector2Array] rather than a reference.
             </summary>
         </member>
         <member name="P:Godot.Polygon2D.Uv">
@@ -25948,7 +26153,7 @@
         </member>
         <member name="M:Godot.PopupMenu.SetItemAsSeparator(System.Int32,System.Boolean)">
             <summary>
-            Mark the item at index "idx" as a separator, which means that it would be displayed as a mere line.
+            Mark the item at index "idx" as a separator, which means that it would be displayed as a line.
             </summary>
         </member>
         <member name="M:Godot.PopupMenu.SetItemAsCheckable(System.Int32,System.Boolean)">
@@ -26406,6 +26611,7 @@
         </member>
         <member name="P:Godot.RandomNumberGenerator.Seed">
             <summary>
+            The seed used by the random number generator. A given seed will give a reproducible sequence of pseudo-random numbers.
             </summary>
         </member>
         <member name="M:Godot.RandomNumberGenerator.Randi">
@@ -26425,7 +26631,7 @@
         </member>
         <member name="M:Godot.RandomNumberGenerator.RandiRange(System.Int32,System.Int32)">
             <summary>
-            Generates pseudo-random 32-bit signed integer between [code]from[/code] and [code]to[/code](inclusive).
+            Generates pseudo-random 32-bit signed integer between [code]from[/code] and [code]to[/code] (inclusive).
             </summary>
         </member>
         <member name="M:Godot.RandomNumberGenerator.Randomize">
@@ -27021,7 +27227,7 @@
         </member>
         <member name="T:Godot.Resource">
             <summary>
-            Resource is the base class for all resource types. Resources are primarily data containers. They are reference counted and freed when no longer in use. They are also loaded only once from disk, and further attempts to load the resource will return the same reference (all this in contrast to a [Node], which is not reference counted and can be instanced from disk as many times as desired). Resources can be saved externally on disk or bundled into another object, such as a [Node] or another resource.
+            Resource is the base class for all resource types, serving primarily as data containers. They are reference counted and freed when no longer in use. They are also loaded only once from disk, and further attempts to load the resource will return the same reference (all this in contrast to a [Node], which is not reference counted and can be instanced from disk as many times as desired). Resources can be saved externally on disk or bundled into another object, such as a [Node] or another resource.
             </summary>
         </member>
         <member name="P:Godot.Resource.ResourceLocalToScene">
@@ -27030,10 +27236,12 @@
         </member>
         <member name="P:Godot.Resource.ResourcePath">
             <summary>
+            The path to the resource. In case it has its own file, it will return its filepath. If it's tied to the scene, it will return the scene's path, followed by the resource's index.
             </summary>
         </member>
         <member name="P:Godot.Resource.ResourceName">
             <summary>
+            The name of the resource. This is an optional identifier.
             </summary>
         </member>
         <member name="M:Godot.Resource._SetupLocalToScene">
@@ -27042,12 +27250,12 @@
         </member>
         <member name="M:Godot.Resource.TakeOverPath(System.String)">
             <summary>
-            Set the path of the resource. Differs from set_path(), if another [code]Resource[/code] exists with "path" it over-takes it, instead of failing.
+            Sets the path of the resource. Differs from [code]set_path()[/code], if another [code]Resource[/code] exists with "path" it over-takes it, instead of failing.
             </summary>
         </member>
         <member name="M:Godot.Resource.GetRid">
             <summary>
-            Return the RID of the resource (or an empty RID). Many resources (such as [Texture], [Mesh], etc) are high level abstractions of resources stored in a server, so this function will return the original RID.
+            Returns the RID of the resource (or an empty RID). Many resources (such as [Texture], [Mesh], etc) are high level abstractions of resources stored in a server, so this function will return the original RID.
             </summary>
         </member>
         <member name="M:Godot.Resource.GetLocalScene">
@@ -27060,6 +27268,7 @@
         </member>
         <member name="M:Godot.Resource.Duplicate(System.Boolean)">
             <summary>
+            Duplicates the resource, returning a new resource. By default, sub-resources are shared between resource copies for efficiency, this can be changed by passing [code]true[/code] to the [code]subresources[/code] argument.
             </summary>
         </member>
         <member name="T:Godot.ResourceFormatLoader">
@@ -27151,36 +27360,37 @@
         </member>
         <member name="T:Godot.ResourcePreloader">
             <summary>
-            Resource Preloader Node. This node is used to preload sub-resources inside a scene, so when the scene is loaded all the resources are ready to use and be retrieved from here.
+            This node is used to preload sub-resources inside a scene, so when the scene is loaded, all the resources are ready to use and can be retrieved from the preloader.
             </summary>
         </member>
         <member name="M:Godot.ResourcePreloader.AddResource(System.String,Godot.Resource)">
             <summary>
+            Adds a resource to the preloader with the given [code]name[/code]. If a resource with the given [code]name[/code] already exists, the new resource will be renamed to "[code]name[/code] N" where N is an incrementing number starting from 2.
             </summary>
         </member>
         <member name="M:Godot.ResourcePreloader.RemoveResource(System.String)">
             <summary>
-            Remove a resource from the preloader by text id.
+            Removes the resource associated to [code]name[/code] from the preloader.
             </summary>
         </member>
         <member name="M:Godot.ResourcePreloader.RenameResource(System.String,System.String)">
             <summary>
-            Rename a resource inside the preloader, from a text-id to a new text-id.
+            Renames a resource inside the preloader from [code]name[/code] to [code]newname[/code].
             </summary>
         </member>
         <member name="M:Godot.ResourcePreloader.HasResource(System.String)">
             <summary>
-            Return true if the preloader has a given resource.
+            Returns true if the preloader contains a resource associated to [code]name[/code].
             </summary>
         </member>
         <member name="M:Godot.ResourcePreloader.GetResource(System.String)">
             <summary>
-            Return the resource given a text-id.
+            Returns the resource associated to [code]name[/code].
             </summary>
         </member>
         <member name="M:Godot.ResourcePreloader.GetResourceList">
             <summary>
-            Return the list of resources inside the preloader.
+            Returns the list of resources inside the preloader.
             </summary>
         </member>
         <member name="T:Godot.ResourceSaver">
@@ -27672,7 +27882,7 @@
         </member>
         <member name="M:Godot.RigidBody.ApplyImpulse(Godot.Vector3,Godot.Vector3)">
             <summary>
-            Applies a positioned impulse which will be affected by the body mass and shape. This is the equivalent of hitting a billiard ball with a cue: a force that is applied once, and only once. Both the impulse and the position are in global coordinates, and the position is relative to the object's origin.
+            Applies a positioned impulse to the body. An impulse is time independent! Applying an impulse every frame would result in a framerate dependent force. For this reason it should only be used when simulating one-time impacts. The position uses the rotation of the global coordinate system, but is centered at the object's origin.
             </summary>
         </member>
         <member name="M:Godot.RigidBody.ApplyTorqueImpulse(Godot.Vector3)">
@@ -27845,7 +28055,7 @@
         </member>
         <member name="M:Godot.RigidBody2D.ApplyImpulse(Godot.Vector2,Godot.Vector2)">
             <summary>
-            Applies a positioned impulse to the body (which will be affected by the body mass and shape). This is the equivalent of hitting a billiard ball with a cue: a force that is applied instantaneously. Both the impulse and the offset from the body origin are in global coordinates.
+            Applies a positioned impulse to the body. An impulse is time independent! Applying an impulse every frame would result in a framerate dependent force. For this reason it should only be used when simulating one-time impacts (use the "_force" functions otherwise). The position uses the rotation of the global coordinate system, but is centered at the object's origin.
             </summary>
         </member>
         <member name="M:Godot.RigidBody2D.ApplyTorqueImpulse(System.Single)">
@@ -27876,26 +28086,6 @@
         <member name="M:Godot.RigidBody2D.GetCollidingBodies">
             <summary>
             Returns a list of the bodies colliding with this one. Use [member contacts_reported] to set the maximum number reported. You must also set [member contact_monitor] to [code]true[/code]. Note that the result of this test is not immediate after moving objects. For performance, list of collisions is updated once per frame and before the physics step. Consider using signals instead.
-            </summary>
-        </member>
-        <member name="P:Godot.RootMotionView.AnimationPath">
-            <summary>
-            </summary>
-        </member>
-        <member name="P:Godot.RootMotionView.Color">
-            <summary>
-            </summary>
-        </member>
-        <member name="P:Godot.RootMotionView.CellSize">
-            <summary>
-            </summary>
-        </member>
-        <member name="P:Godot.RootMotionView.Radius">
-            <summary>
-            </summary>
-        </member>
-        <member name="P:Godot.RootMotionView.ZeroY">
-            <summary>
             </summary>
         </member>
         <member name="T:Godot.SceneState">
@@ -28168,6 +28358,13 @@
         <member name="M:Godot.SceneTree.CreateTimer(System.Single,System.Boolean)">
             <summary>
             Returns a [SceneTreeTimer] which will [signal SceneTreeTimer.timeout] after the given time in seconds elapsed in this SceneTree. If [code]pause_mode_process[/code] is set to false, pausing the SceneTree will also pause the timer.
+            Commonly used to create a one-shot delay timer as in the following example:
+            [codeblock]
+            func some_function():
+            print("start")
+            yield(get_tree().create_timer(1.0), "timeout")
+            print("end")
+            [/codeblock]
             </summary>
         </member>
         <member name="M:Godot.SceneTree.GetNodeCount">
@@ -28269,8 +28466,21 @@
             Returns the sender's peer ID for the most recently received RPC call.
             </summary>
         </member>
+        <member name="T:Godot.SceneTreeTimer">
+            <summary>
+            A one-shot timer managed by the scene tree, which emits [signal timeout] on completion. See also [method SceneTree.create_timer].
+            As opposed to [Timer], it does not require the instantiation of a node. Commonly used to create a one-shot delay timer as in the following example:
+            [codeblock]
+            func some_function():
+            print("start")
+            yield(get_tree().create_timer(1.0), "timeout")
+            print("end")
+            [/codeblock]
+            </summary>
+        </member>
         <member name="P:Godot.SceneTreeTimer.TimeLeft">
             <summary>
+            The time remaining.
             </summary>
         </member>
         <member name="T:Godot.Script">
@@ -28335,7 +28545,7 @@
         </member>
         <member name="T:Godot.ScrollContainer">
             <summary>
-            A ScrollContainer node with a [Control] child and scrollbar child ([HScrollBar], [VScrollBar], or both) will only draw the Control within the ScrollContainer area. Scrollbars will automatically be drawn at the right (for vertical) or bottom (for horizontal) and will enable dragging to move the viewable Control (and its children) within the ScrollContainer. Scrollbars will also automatically resize the grabber based on the minimum_size of the Control relative to the ScrollContainer. Works great with a [Panel] control. You can set EXPAND on children size flags, so they will upscale to ScrollContainer size if ScrollContainer size is bigger (scroll is invisible for chosen dimension).
+            A ScrollContainer node meant to contain a [Control] child. ScrollContainers will automatically create a scrollbar child ([HScrollBar], [VScrollBar], or both) when needed and will only draw the Control within the ScrollContainer area. Scrollbars will automatically be drawn at the right (for vertical) or bottom (for horizontal) and will enable dragging to move the viewable Control (and its children) within the ScrollContainer. Scrollbars will also automatically resize the grabber based on the minimum_size of the Control relative to the ScrollContainer. Works great with a [Panel] control. You can set EXPAND on children size flags, so they will upscale to ScrollContainer size if ScrollContainer size is bigger (scroll is invisible for chosen dimension).
             </summary>
         </member>
         <member name="P:Godot.ScrollContainer.ScrollHorizontalEnabled">
@@ -28548,6 +28758,10 @@
             </summary>
         </member>
         <member name="F:Godot.Skeleton.NotificationUpdateSkeleton">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Godot.Skeleton.BonesInWorldTransform">
             <summary>
             </summary>
         </member>
@@ -30327,7 +30541,7 @@
         </member>
         <member name="T:Godot.SpotLight">
             <summary>
-            A SpotLight light is a type of [Light] node that emits lights in a specific direction, in the shape of a cone. The light is attenuated through the distance and this attenuation can be configured by changing the energy, radius and attenuation parameters of [Light]. TODO: Image of a spotlight.
+            A SpotLight light is a type of [Light] node that emits lights in a specific direction, in the shape of a cone. The light is attenuated through the distance and this attenuation can be configured by changing the energy, radius and attenuation parameters of [Light].
             </summary>
         </member>
         <member name="P:Godot.SpotLight.SpotRange">
@@ -31068,18 +31282,28 @@
         </member>
         <member name="P:Godot.StyleBox.ContentMarginLeft">
             <summary>
+            The left margin for the contents of this style box.	Increasing this value reduces the space available to the contents from the left.
+            Refer to [member content_margin_bottom] for extra considerations.
             </summary>
         </member>
         <member name="P:Godot.StyleBox.ContentMarginRight">
             <summary>
+            The right margin for the contents of this style box. Increasing this value reduces the space available to the contents from the right.
+            Refer to [member content_margin_bottom] for extra considerations.
             </summary>
         </member>
         <member name="P:Godot.StyleBox.ContentMarginTop">
             <summary>
+            The top margin for the contents of this style box. Increasing this value reduces the space available to the contents from the top.
+            Refer to [member content_margin_bottom] for extra considerations.
             </summary>
         </member>
         <member name="P:Godot.StyleBox.ContentMarginBottom">
             <summary>
+            The bottom margin for the contents of this style box. Increasing this value reduces the space available to the contents from the bottom.
+            If this value is negative, it is ignored and a child-specific margin is used instead. For example for [StyleBoxFlat] the border thickness (if any) is used instead.
+            It is up to the code using this style box to decide what these contents are: for example, a [Button] respects this content margin for the textual contents of the button.
+            [method get_margin] should be used to fetch this value as consumer instead of reading these properties directly. This is because it correctly respects negative values and the fallback mentioned above.
             </summary>
         </member>
         <member name="M:Godot.StyleBox.TestMask(Godot.Vector2,Godot.Rect2)">
@@ -31089,7 +31313,8 @@
         </member>
         <member name="M:Godot.StyleBox.GetMargin(Godot.Margin)">
             <summary>
-            Return the offset of margin "margin" (see MARGIN_* enum).
+            Return the content margin offset for the specified margin
+            Positive values reduce size inwards, unlike [Control]'s margin values.
             </summary>
         </member>
         <member name="M:Godot.StyleBox.GetMinimumSize">
@@ -31104,6 +31329,10 @@
         <member name="M:Godot.StyleBox.GetOffset">
             <summary>
             Return the "offset" of a stylebox, this is a helper function, like writing [code]Vector2(style.get_margin(MARGIN_LEFT), style.get_margin(MARGIN_TOP))[/code].
+            </summary>
+        </member>
+        <member name="M:Godot.StyleBox.GetCurrentItemDrawn">
+            <summary>
             </summary>
         </member>
         <member name="M:Godot.StyleBox.Draw(Godot.RID,Godot.Rect2)">
@@ -31305,46 +31534,66 @@
         </member>
         <member name="P:Godot.StyleBoxTexture.Texture">
             <summary>
+            The texture to use when drawing this style box.
             </summary>
         </member>
         <member name="P:Godot.StyleBoxTexture.NormalMap">
             <summary>
+            The normal map to use when drawing this style box.
             </summary>
         </member>
         <member name="P:Godot.StyleBoxTexture.RegionRect">
             <summary>
+            Species a sub region of the texture to use.
+            This is equivalent to first wrapping the texture in an [AtlasTexture] with the same region.
             </summary>
         </member>
         <member name="P:Godot.StyleBoxTexture.MarginLeft">
             <summary>
+            Increases the left margin of the 3x3 texture box.
+            A higher value means more of the source texture is considered to be part of the left border of the 3x3 box.
+            This is also the value used as fallback for [member StyleBox.content_margin_left] if it is negative.
             </summary>
         </member>
         <member name="P:Godot.StyleBoxTexture.MarginRight">
             <summary>
+            Increases the right margin of the 3x3 texture box.
+            A higher value means more of the source texture is considered to be part of the right border of the 3x3 box.
+            This is also the value used as fallback for [member StyleBox.content_margin_right] if it is negative.
             </summary>
         </member>
         <member name="P:Godot.StyleBoxTexture.MarginTop">
             <summary>
+            Increases the top margin of the 3x3 texture box.
+            A higher value means more of the source texture is considered to be part of the top border of the 3x3 box.
+            This is also the value used as fallback for [member StyleBox.content_margin_top] if it is negative.
             </summary>
         </member>
         <member name="P:Godot.StyleBoxTexture.MarginBottom">
             <summary>
+            Increases the bottom margin of the 3x3 texture box.
+            A higher value means more of the source texture is considered to be part of the bottom border of the 3x3 box.
+            This is also the value used as fallback for [member StyleBox.content_margin_bottom] if it is negative.
             </summary>
         </member>
         <member name="P:Godot.StyleBoxTexture.ExpandMarginLeft">
             <summary>
+            Expands the left margin of this style box when drawing, causing it be drawn larger than requested.
             </summary>
         </member>
         <member name="P:Godot.StyleBoxTexture.ExpandMarginRight">
             <summary>
+            Expands the right margin of this style box when drawing, causing it be drawn larger than requested.
             </summary>
         </member>
         <member name="P:Godot.StyleBoxTexture.ExpandMarginTop">
             <summary>
+            Expands the top margin of this style box when drawing, causing it be drawn larger than requested.
             </summary>
         </member>
         <member name="P:Godot.StyleBoxTexture.ExpandMarginBottom">
             <summary>
+            Expands the bottom margin of this style box when drawing, causing it be drawn larger than requested.
             </summary>
         </member>
         <member name="P:Godot.StyleBoxTexture.AxisStretchHorizontal">
@@ -31357,6 +31606,7 @@
         </member>
         <member name="P:Godot.StyleBoxTexture.ModulateColor">
             <summary>
+            Modulates the color of the texture when this style box is drawn.
             </summary>
         </member>
         <member name="P:Godot.StyleBoxTexture.DrawCenter">
@@ -32705,6 +32955,10 @@
             Sets theme values to a copy of the default theme values.
             </summary>
         </member>
+        <member name="M:Godot.Theme.CopyTheme(Godot.Theme)">
+            <summary>
+            </summary>
+        </member>
         <member name="T:Godot.Thread">
             <summary>
             A unit of execution in a process. Can run methods on [Object]s simultaneously. The use of synchronization via [Mutex], [Semaphore] is advised if working with shared objects.
@@ -32913,12 +33167,12 @@
         </member>
         <member name="M:Godot.TileMap.GetCell(System.Int32,System.Int32)">
             <summary>
-            Returns the tile index of the given cell.
+            Returns the tile index of the given cell. If no tile exists in the cell, returns [constant INVALID_CELL].
             </summary>
         </member>
         <member name="M:Godot.TileMap.GetCellv(Godot.Vector2)">
             <summary>
-            Returns the tile index of the cell given by a Vector2.
+            Returns the tile index of the cell given by a Vector2. If no tile exists in the cell, returns [constant INVALID_CELL].
             </summary>
         </member>
         <member name="M:Godot.TileMap.IsCellXFlipped(System.Int32,System.Int32)">
@@ -33278,6 +33532,14 @@
         <member name="M:Godot.TileSet.TileGetShapeOneWay(System.Int32,System.Int32)">
             <summary>
             Returns the one-way collision value of a tile's shape.
+            </summary>
+        </member>
+        <member name="M:Godot.TileSet.TileSetShapeOneWayMargin(System.Int32,System.Int32,System.Single)">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:Godot.TileSet.TileGetShapeOneWayMargin(System.Int32,System.Int32)">
+            <summary>
             </summary>
         </member>
         <member name="M:Godot.TileSet.TileAddShape(System.Int32,Godot.Shape2D,Godot.Transform2D,System.Boolean,System.Nullable{Godot.Vector2})">
@@ -34122,7 +34384,7 @@
             Tween.TRANS_LINEAR, Tween.EASE_IN_OUT)
             tween.start()
             [/codeblock]
-            Many methods require a property name, such as "position" above. You can find the correct property name by hovering over the property in the Inspector.
+            Many methods require a property name, such as "position" above. You can find the correct property name by hovering over the property in the Inspector. You can also provide the components of a property directly by using "property:component" (eg. [code]position:x[/code]), where it would only apply to that particular component.
             Many of the methods accept [code]trans_type[/code] and [code]ease_type[/code]. The first accepts an [enum TransitionType] constant, and refers to the way the timing of the animation is handled (see [code]http://easings.net/[/code] for some examples). The second accepts an [enum EaseType] constant, and controls the where [code]trans_type[/code] is applied to the interpolation (in the beginning, the end, or both). If you don't know which transition and easing to pick, you can try different [enum TransitionType] constants with [code]EASE_IN_OUT[/code], and use the one that looks best.
             </summary>
         </member>
@@ -34348,19 +34610,19 @@
             Common behavior is to create an action, then add do/undo calls to functions or property changes, then committing the action.
             Here's an example on how to add an action to Godot editor's own 'undoredo':
             [codeblock]
-            var undoredo = get_undo_redo() # method of EditorPlugin
+            var undo_redo = get_undo_redo() # Method of EditorPlugin.
             func do_something():
-            pass # put your code here
+            pass # Put your code here.
             func undo_something():
-            pass # put here the code that reverts what's done by "do_something()"
+            pass # Put here the code that reverts what's done by "do_something()".
             func _on_MyButton_pressed():
             var node = get_node("MyNode2D")
-            undoredo.create_action("Move the node")
-            undoredo.add_do_method(self, "do_something")
-            undoredo.add_undo_method(self, "undo_something")
-            undoredo.add_do_property(node, "position", Vector2(100,100))
-            undoredo.add_undo_property(node, "position", node.position)
-            undoredo.commit_action()
+            undo_redo.create_action("Move the node")
+            undo_redo.add_do_method(self, "do_something")
+            undo_redo.add_undo_method(self, "undo_something")
+            undo_redo.add_do_property(node, "position", Vector2(100,100))
+            undo_redo.add_undo_property(node, "position", node.position)
+            undo_redo.commit_action()
             [/codeblock]
             [method create_action], [method add_do_method], [method add_undo_method], [method add_do_property], [method add_undo_property], and [method commit_action] should be called one after the other, like in the example. Not doing so could lead to crashes.
             If you don't need to register a method you can leave [method add_do_method] and [method add_undo_method] out, and so it goes for properties. You can register more than one method/property.
@@ -34368,24 +34630,32 @@
         </member>
         <member name="F:Godot.UndoRedo.MergeMode.Disable">
             <summary>
+            Makes [code]do[/code]/[code]undo[/code] operations stay in separate actions.
             </summary>
         </member>
         <member name="F:Godot.UndoRedo.MergeMode.Ends">
             <summary>
+            Makes so that the action's [code]do[/code] operation is from the first action created and the [code]undo[/code] operation is from the last subsequent action with the same name.
             </summary>
         </member>
         <member name="F:Godot.UndoRedo.MergeMode.All">
             <summary>
+            Makes subsequent actions with the same name be merged into one.
             </summary>
         </member>
         <member name="M:Godot.UndoRedo.CreateAction(System.String,Godot.UndoRedo.MergeMode)">
             <summary>
             Create a new action. After this is called, do all your calls to [method add_do_method], [method add_undo_method], [method add_do_property], and [method add_undo_property], then commit the action with [method commit_action].
+            The way actions are merged is dictated by the [code]merge_mode[/code] argument. See [enum MergeMode] for details.
             </summary>
         </member>
         <member name="M:Godot.UndoRedo.CommitAction">
             <summary>
             Commit the action. All 'do' methods/properties are called/set when this function is called.
+            </summary>
+        </member>
+        <member name="M:Godot.UndoRedo.IsCommitingAction">
+            <summary>
             </summary>
         </member>
         <member name="M:Godot.UndoRedo.AddDoMethod(Godot.Object,System.String,System.Object[])">
@@ -35339,7 +35609,11 @@
         </member>
         <member name="M:Godot.Viewport.GetTexture">
             <summary>
-            Returns the viewport's texture.
+            Returns the viewport's texture. Note that due to the way OpenGL works, the resulting [ViewportTexture] is flipped vertically. You can use [method Image.flip_y] on the result of [method Texture.get_data] to flip it back, for example:
+            [codeblock]
+            var img = get_viewport().get_texture().get_data()
+            img.flip_y()
+            [/codeblock]
             </summary>
         </member>
         <member name="M:Godot.Viewport.GetViewportRid">
@@ -36192,7 +36466,7 @@
         </member>
         <member name="T:Godot.VisualScriptCondition">
             <summary>
-            A Visual Script node that checks a [bool] input port. If [code]true[/code], it will exit via the “true” sequence port. If [code]false[/code], it will exit via the "false" sequence port. After exiting either, it exits via the “done” port. Sequence ports may be left disconnected.
+            A Visual Script node that checks a [bool] input port. If [code]true[/code], it will exit via the "true" sequence port. If [code]false[/code], it will exit via the "false" sequence port. After exiting either, it exits via the "done" port. Sequence ports may be left disconnected.
             [b]Input Ports:[/b]
             - Sequence: [code]if (cond) is[/code]
             - Data (boolean): [code]cond[/code]
@@ -40112,7 +40386,8 @@
         <member name="M:Godot.WebSocketClient.ConnectToUrl(System.String,System.String[],System.Boolean)">
             <summary>
             Connect to the given URL requesting one of the given [code]protocols[/code] as sub-protocol.
-            If [code]true[/code], is passed as [code]gd_mp_api[/code], the client will behave like a network peer for the [MultiplayerAPI]. Note: connections to non Godot servers will not work, and [signal data_received] will not be emitted when this option is true.
+            If [code]true[/code] is passed as [code]gd_mp_api[/code], the client will behave like a network peer for the [MultiplayerAPI], connections to non Godot servers will not work, and [signal data_received] will not be emitted.
+            If [code]false[/code] is passed instead (default), you must call [PacketPeer] functions ([code]put_packet[/code], [code]get_packet[/code], etc.) on the [WebSocketPeer] returned via [code]get_peer(1)[/code] and not on this object directly (e.g. [code]get_peer(1).put_packet(data)[/code]).
             &lt;param name="protocols"&gt;If the param is null, then the default value is new string[] {}&lt;/param&gt;
             </summary>
         </member>
@@ -40200,7 +40475,8 @@
             <summary>
             Start listening on the given port.
             You can specify the desired subprotocols via the "protocols" array. If the list empty (default), "binary" will be used.
-            You can use this server as a network peer for [MultiplayerAPI] by passing [code]true[/code] as [code]gd_mp_api[/code]. Note: [signal data_received] will not be fired and clients other than Godot will not work in this case.
+            If [code]true[/code] is passed as [code]gd_mp_api[/code], the server will behave like a network peer for the [MultiplayerAPI], connections from non Godot clients will not work, and [signal data_received] will not be emitted.
+            If [code]false[/code] is passed instead (default), you must call [PacketPeer] functions ([code]put_packet[/code], [code]get_packet[/code], etc.), on the [WebSocketPeer] returned via [code]get_peer(ID)[/code] to communicate with the peer with given [code]ID[/code] (e.g. [code]get_peer(ID).get_available_packet_count[/code]).
             &lt;param name="protocols"&gt;If the param is null, then the default value is new string[] {}&lt;/param&gt;
             </summary>
         </member>

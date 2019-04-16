@@ -1,41 +1,38 @@
-[gd_resource type="Environment" load_steps=2 format=2]
-
-[sub_resource type="ProceduralSky" id=1]
-
-sky_top_color = Color( 0.231373, 0.545098, 0.94902, 1 )
-sky_horizon_color = Color( 0.321569, 0.690196, 0.988235, 1 )
-sky_energy = 0.65
-ground_bottom_color = Color( 0.34902, 0.647059, 0.941176, 1 )
-ground_horizon_color = Color( 0.231373, 0.584314, 0.839216, 1 )
-sun_curve = 0.214355
+[gd_resource type="Environment" format=2]
 
 [resource]
-
-background_mode = 2
-background_sky = SubResource( 1 )
-ambient_light_color = Color( 0.941176, 0.945098, 0.670588, 1 )
-ambient_light_sky_contribution = 0.54
-fog_color = Color( 0.54902, 0.670588, 0.960784, 1 )
-fog_depth_begin = 168.7
-fog_depth_end = 200.0
-fog_depth_curve = 4.14106
+background_mode = 1
+background_color = Color( 0.0588235, 0.670588, 1, 1 )
+background_energy = 2.96
+ambient_light_color = Color( 1, 0.772549, 0.635294, 1 )
+ambient_light_energy = 1.15
+ambient_light_sky_contribution = 0.0
+fog_enabled = true
+fog_depth_begin = 0.0
+fog_depth_end = 400.0
+fog_depth_curve = 2.21914
+fog_transmit_enabled = true
+fog_transmit_curve = 0.189465
+fog_height_max = 997.2
 auto_exposure_enabled = true
+auto_exposure_max_luma = 5.31
 ss_reflections_roughness = false
 ssao_enabled = true
-ssao_radius = 5.0
-ssao_intensity = 10.0
-ssao_light_affect = 0.38
-ssao_quality = 1
-ssao_blur = 2
-ssao_edge_sharpness = 1.25
+ssao_radius = 4.6
+ssao_intensity = 0.8
+ssao_intensity2 = 0.0
+ssao_quality = 2
+ssao_blur = 0
+ssao_edge_sharpness = 0.0
 dof_blur_far_distance = 164.84
 dof_blur_far_transition = 17.11
 dof_blur_far_amount = 0.06
 dof_blur_near_distance = 10.0
 dof_blur_near_transition = 3.66
-glow_strength = 0.86
-glow_bloom = 0.17
-glow_bicubic_upscale = true
+glow_enabled = true
+glow_bloom = 0.13
 adjustment_enabled = true
-adjustment_saturation = 1.94
+adjustment_brightness = 1.03
+adjustment_contrast = 1.63
+adjustment_saturation = 1.08
 

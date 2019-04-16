@@ -25,7 +25,7 @@ public class Chunk : Object
     public Vector2 Offset; // Chunk position from X:0, Y:0
 
     // All the voxels into the chunk.
-    public Dictionary<Vector3, Voxel> Voxels = new Dictionary<Vector3, Voxel>();
+    public Dictionary<Vector3, Voxel> Voxels;
 
     // Generation settings
     // TODO: Move generation settings to another class.
@@ -41,19 +41,15 @@ public class Chunk : Object
 
     private Dictionary<Vector2, Chunk> Queue;
 
-    public Chunk(Vector2 pOffset, Dictionary<Vector2, Chunk> pQueue, OpenSimplexNoise pNoise)
+    public Chunk(Vector2 pOffset, OpenSimplexNoise pNoise)
     {
-
-        // if the chunk was already loaded.
-        if (pQueue.ContainsKey(pOffset))
-            return;
 
         // Passing in the seed.
         RandomGenerator.Randomize();
         Offset = pOffset;
-        Queue = pQueue;
+ 
 
-        Generate(pNoise);
+
         
 
         // When the preloading is done, add it to the queue.
@@ -169,6 +165,8 @@ public class Chunk : Object
             Vector3 scanPosition = new Vector3(x, i - tree.Height, z);
             if (Voxels.ContainsKey(scanPosition) && Voxels[scanPosition].type == BlockType.grass)
             {
+                if(scanPosition.y < Generator.WaterLevel)
+                    return;
                 // Then place the voxels of the tree.// ofc always security check.
                 foreach (Voxel voxel in tree.Voxels.Values)
                 {
@@ -198,7 +196,7 @@ public class Chunk : Object
     public void MakeBoulder(Vector3 pOffset)
     {
         // Random width of the boulder
-        int boulderWidth = RandomGenerator.RandiRange(3, 6);
+        int boulderWidth = RandomGenerator.RandiRange(3, 12);
         for (int x = -boulderWidth; x < boulderWidth; x++)
             for (int y = -boulderWidth; y < boulderWidth; y++)
                 for (int z = -boulderWidth; z < boulderWidth; z++)
