@@ -1,8 +1,8 @@
 [gd_resource type="SpatialMaterial" format=2]
 
 [resource]
-
-flags_use_point_size = true
-flags_ensure_correct_normals = true
 vertex_color_use_as_albedo = true
+params_specular_mode = 4
+params_line_width = 0.1
+roughness_texture_channel = 3
 

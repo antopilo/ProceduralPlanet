@@ -21,7 +21,7 @@ public struct Voxel
 public class Chunk : Object
 {
     public static RandomNumberGenerator RandomGenerator = new RandomNumberGenerator();
-    public Vector3 ChunkSize = new Vector3(32, 255, 32);
+    public Vector3 ChunkSize = new Vector3(16, 255, 16);
     public Vector2 Offset; // Chunk position from X:0, Y:0
 
     // All the voxels into the chunk.
@@ -33,11 +33,11 @@ public class Chunk : Object
     private int CarpetMaxHeight = 128;
 
     // Trees
-    private int TreeChance = 50;
+    private int TreeChance = 10;
     private int MaxTree = 4;
 
     // Rocks
-    private int RockChance = 33;
+    private int RockChance = 5;
 
     private Dictionary<Vector2, Chunk> Queue;
 
@@ -60,56 +60,8 @@ public class Chunk : Object
     /// Generate the terrain of the chunk.
     /// </summary>
     /// <param name="pNoise"></param>
-    public void Generate(OpenSimplexNoise pNoise)
+    public void Generate()
     {
-        // Terrain generation(noise2D and noise3D).
-        for (int z = 0; z < ChunkSize.z; z += 1)
-            for (int x = 0; x < ChunkSize.x; x += 1)
-            {
-                // Global position in the noise.
-                Vector2 globalPosition = new Vector2((Offset.x * ChunkSize.x) + x, (Offset.y * ChunkSize.z) + z);
-                float height = Mathf.Stepify((pNoise.GetNoise2dv(globalPosition) + 1) * CarpetMaxHeight, 1);
-
-                // Make new voxel .
-                Voxel voxel = new Voxel()
-                {
-                    Position = new Vector3(x, height, z),
-                    type = 0
-                };
-                Voxels.Add(voxel.Position, voxel);
-
-                #region 3D Noise, very expensive.
-                for (int y = int.Parse(ChunkSize.y.ToString()); y > height; y--)
-                {
-                    Vector3 positionAir = new Vector3(x, y, z);
-
-                    if (Voxels.ContainsKey(positionAir)) // Skip ground 0 vox place earlier.
-                        continue;
-
-                    Vector3 OffsetGlobal = new Vector3(Offset.x * ChunkSize.x, y, Offset.y * ChunkSize.z); // Global position in noise.
-                    float density = pNoise.GetNoise3dv(positionAir + OffsetGlobal) / (y / 2); // Density in the noise.
-                    //float aboveDensity = pNoise.GetNoise3dv(positionAir + OffsetGlobal + new Vector3(0, 1, 0) / (y / 2));
-                    if (density >= 0 && density <= FloatTreshold)
-                    {
-                        Vector3 voxelPosition;
-                        height += 1;
-                        voxelPosition = new Vector3(x, height, z);
-
-                        // while pulling down the bubles pos might be on existing vox.
-                        voxel.Position = voxelPosition;
-                        if (density < 0.1)
-                            voxel.type = BlockType.grass;
-                        else
-                            voxel.type = BlockType.rock;
-
-                        if (!Voxels.ContainsKey(voxel.Position))
-                            Voxels.Add(voxel.Position, voxel);
-
-                    }
-                }
-                #endregion // Disabled for now.
-            }
-
         // Vegetation pass.
         if (RandomGenerator.RandiRange(1, 100) < TreeChance)
         {
@@ -140,8 +92,6 @@ public class Chunk : Object
                 }
             }
         }
-
-        Queue.Add(Offset, this);
     }
 
 

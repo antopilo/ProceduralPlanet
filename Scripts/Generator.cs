@@ -18,7 +18,7 @@ public class Generator : Node
     Chunk c1; 
    
     [Export] private int RenderDistance = 5;
-    [Export] private int PreloadDistance = 8;
+    [Export] private int PreloadDistance = 12;
 
     // Chunks
     private Dictionary<Vector2, Chunk> LoadedChunks = new Dictionary<Vector2, Chunk>();
@@ -57,8 +57,7 @@ public class Generator : Node
         WaterMaterial = ResourceLoader.Load("res://material/water.tres") as SpatialMaterial;
 
         GenerateSeed();
-        c1 = new Chunk(new Vector2(0, 0), Noise);
-        c1.Offset = new Vector2(0, 0);
+
         // Water
         Water = new MeshInstance();
         WaterMesh = new PlaneMesh();
@@ -67,18 +66,45 @@ public class Generator : Node
         Water.SetMesh(WaterMesh);
         Water.Translation = new Vector3(0, WaterLevel - WaterOffset, 0);
         AddChild(Water);
+
+        LoadSpawn();
+
+
         Preload();
-
-
     }
+    public void LoadSpawn()
+    {
+        Chunk c1 = new Chunk(new Vector2(0, 0), Noise);
+        c1.Offset = new Vector2(0, 0);
+        c1.Voxels = GetChunkData(c1.Offset);
 
+        if (rng.Randi() % 100 < 15)
+        {
+            c1.PlaceTrees();
+        }
+
+        c1.Offset = new Vector2(1, 1);
+        c1.Voxels = GetChunkData(c1.Offset);
+        PreloadedChunks.Add(c1.Offset, c1);
+
+        c1.Offset = new Vector2(-1, -1);
+        c1.Voxels = GetChunkData(c1.Offset);
+        PreloadedChunks.Add(c1.Offset, c1);
+
+        c1.Offset = new Vector2(0, -1);
+        c1.Voxels = GetChunkData(c1.Offset);
+        PreloadedChunks.Add(c1.Offset, c1);
+
+        c1.Offset = new Vector2(0, 1);
+        c1.Voxels = GetChunkData(c1.Offset);
+        PreloadedChunks.Add(c1.Offset, c1);
+    }
     public void Preload()
     {
         Thread = new System.Threading.Thread(new System.Threading.ThreadStart(EndPreload));
-        Thread.Priority = System.Threading.ThreadPriority.Highest;
+        var Thread2 = new System.Threading.Thread(new System.Threading.ThreadStart(RenderThread));
+        Thread.Priority = System.Threading.ThreadPriority.AboveNormal;
         Thread.Start();
-        
-        
     }
 
     public void EndPreload()
@@ -90,41 +116,44 @@ public class Generator : Node
             int camZ = int.Parse(Mathf.Stepify(Camera.Transform.origin.z / ChunkSize.z, 1).ToString());
             for (int x = -RenderDistance + camX; x < RenderDistance + camX; x++)
                 for (int z = -RenderDistance + camZ; z < RenderDistance + camZ; z++)
-                    if (!LoadedChunks.ContainsKey(new Vector2(x, z)) && !PreloadedChunks.ContainsKey(new Vector2(x, z)) && count < 8)
+                    if (!LoadedChunks.ContainsKey(new Vector2(x, z)) && !PreloadedChunks.ContainsKey(new Vector2(x, z)) && count < 4)
                     {
-                        //count++;
+                        count++;
                         Chunk c1 = new Chunk(new Vector2(x, z), Noise);
                         c1.Offset = new Vector2(x, z);
                         c1.Voxels = GetChunkData(c1.Offset);
-                        
-                        if (rng.Randi() % 100 < 25)
-                        {
-                            c1.PlaceTrees();
-                        }
+                        c1.Generate();
                         PreloadedChunks.Add(c1.Offset, c1);
                     }
+        }
+    }
+
+    public void RenderThread()
+    {
+        while (true)
+        {
+            if (PreloadedChunks.Count <= 0)
+                continue;
+            var c = PreloadedChunks.ToList()[PreloadedChunks.ToList().Count() - 1];
+            PreloadedChunks.Remove(c.Key);
+            Render(c.Value);
         }
     }
 
 
     public override void _Process(float delta)
     {
-
-       
-   
         if (tick < UpdateRate)
         {
             tick += delta;
             return;
         }
         tick = 0;
-
         if (PreloadedChunks.Count <= 0)
             return;
-
-        List<Vector2> keys = new List<Vector2>(PreloadedChunks.Keys);
-        Render(PreloadedChunks[keys[0]]);
-        PreloadedChunks.Remove(keys[0]);
+        var c = PreloadedChunks.ToList()[PreloadedChunks.ToList().Count() - 1];
+        PreloadedChunks.Remove(c.Key);
+        Render(c.Value);
     }
 
     /// <summary>
@@ -142,12 +171,12 @@ public class Generator : Node
         // Noise.Lacunarity = 0.25f;
         Noise.Seed = CurrentSeed;
         Noise.Octaves = 4;
-        Noise.Period = 1024;
+        Noise.Period = 750;
         Noise.Persistence = 0.8f;
 
         Noise2.Seed = CurrentSeed;
-        Noise2.Octaves = 5;
-        Noise2.Period = 512;
+        Noise2.Octaves = 3;
+        Noise2.Period = 300;
         Noise2.Persistence = 0.7f;
     }
 
@@ -159,30 +188,32 @@ public class Generator : Node
        
         foreach (Voxel vox in pChunk.Voxels.Values)
             CreateVoxel(SurfaceTool, vox, pChunk);
-
+        SurfaceTool.Index();
         MeshInstance chunk = new MeshInstance
         {
             Mesh = SurfaceTool.Commit(),
             Name = pChunk.Offset.ToString(),
-            Translation = new Vector3(pChunk.Offset.x * pChunk.ChunkSize.x / 2, 0, pChunk.Offset.y * pChunk.ChunkSize.z / 2)
+            Translation = new Vector3(pChunk.Offset.x * pChunk.ChunkSize.x , 0, pChunk.Offset.y * pChunk.ChunkSize.z )
         };
 
-        //chunk.CreateTrimeshCollision(); // Collisions generation.
+        // Collisions generation.
+        
+        chunk.CreateTrimeshCollision();
         chunk.AddToGroup("Chunk");
         // Pop animation
 
         AddChild(chunk);
-
-        Tween t = new Tween();
-        AddChild(t);
-        t.InterpolateProperty(chunk, "scale", new Vector3(0, 0, 0), new Vector3(1, 1, 1), 2f, Tween.TransitionType.Expo, Tween.EaseType.Out);
-        t.InterpolateProperty(chunk, "translation", chunk.Translation - new Vector3(0, 255 * 2, 0), chunk.Translation, 2f, Tween.TransitionType.Expo, Tween.EaseType.Out);
-        chunk.Scale = new Vector3(0, 0, 0);
-        t.Start();
+        //Tween t = new Tween();
+        //AddChild(t);
+        //t.InterpolateProperty(chunk, "scale", new Vector3(0, 0, 0), new Vector3(1, 1, 1), 2f, Tween.TransitionType.Expo, Tween.EaseType.Out);
+        //t.InterpolateProperty(chunk, "translation", chunk.Translation - new Vector3(0, 255 * 2, 0), chunk.Translation, 2f, Tween.TransitionType.Expo, Tween.EaseType.Out);
+        //chunk.Scale = new Vector3(0, 0, 0);
+        //t.Start();
 
         if (!LoadedChunks.ContainsKey(pChunk.Offset))
             LoadedChunks.Add(pChunk.Offset, pChunk);
 
+            
         SurfaceTool.Clear();
     }
 
@@ -196,19 +227,19 @@ public class Generator : Node
         switch (pVoxel.type)
         {
             case BlockType.grass: // Grass
-                pSurfaceTool.AddColor(new Color("3e8948").Darkened(rng.RandfRange(0f, 0.1f)));
+                pSurfaceTool.AddColor(new Color("6aff26").Darkened( pVoxel.Position.y / 512f / 100f));
                 break;
             case BlockType.rock: // Rock
-                pSurfaceTool.AddColor(new Color("5a6988"));
+                pSurfaceTool.AddColor(new Color("3d475b"));
                 break;
             case BlockType.sand: // Sand
-                pSurfaceTool.AddColor(new Color("fee761"));
+                pSurfaceTool.AddColor(new Color("ffe23a"));
                 break;
             case BlockType.wood: // Wood
                 pSurfaceTool.AddColor(new Color("3e2731"));
                 break;
             case BlockType.leaves:
-                pSurfaceTool.AddColor(new Color("63c74d"));
+                pSurfaceTool.AddColor(new Color("76db60"));
                 break;
             default:
                 pSurfaceTool.AddColor(new Color("76552b"));
@@ -223,8 +254,8 @@ public class Generator : Node
         bool bottom = !pChunk.Voxels.ContainsKey(pPosition + new Vector3(0, -1, 0));
 
         // If block is hidden.
-        //if (left && right && front && back && top && bottom || pPosition.y < 0)
-        //    return;
+        if (left && right && front && back && top && bottom || pPosition.y < 0)
+            return;
 
         if (top) // Above
         {
@@ -347,7 +378,7 @@ public class Generator : Node
             {
                 // Global position in the noise.
                 Vector2 globalPosition = new Vector2((Offset.x * ChunkSize.x) + x, (Offset.y * ChunkSize.z) + z);
-                float height = Mathf.Stepify(((Noise.GetNoise2dv(globalPosition) + 0.2f) * ChunkSize.y ), 1);
+                float height = Mathf.Stepify(((Noise.GetNoise2dv(globalPosition) + 0.5f) * (ChunkSize.y / 2) ), 1);
 
                 // Make new voxel .
                 Voxel voxel = new Voxel()
@@ -376,7 +407,7 @@ public class Generator : Node
                     Vector3 OffsetGlobal = new Vector3(Offset.x * ChunkSize.x, 0, Offset.y * ChunkSize.z); // Global position in noise.
                     float density = Noise2.GetNoise3dv(positionAir + OffsetGlobal); // Density in the noise.
                     float densityUp = Noise2.GetNoise3dv(positionAir + OffsetGlobal + new Vector3(0, 1, 0));
-                    float DensityModifier = ((y / 4 / ChunkSize.y) * 2);
+                    float DensityModifier = ((y / 3.5f / ChunkSize.y) * 2);
                     // GD.Print(DensityModifier);
                     if (density - DensityModifier >= 0 && densityUp >= density)
                     {
@@ -386,7 +417,7 @@ public class Generator : Node
 
                         // while pulling down the bubbles pos might be on existing vox.
                         voxel.Position = voxelPosition;
-                        if (densityUp <= 0)
+                        if (densityUp <= density)
                             voxel.type = BlockType.grass;
                         else
                             voxel.type = BlockType.rock;
@@ -410,7 +441,16 @@ public class Generator : Node
                         voxel.type = BlockType.grass;
 
                         if (!Voxels.ContainsKey(voxel.Position))
+                        {
+                            
                             Voxels.Add(voxel.Position, voxel);
+                        }
+                        else
+                        {
+                            voxel.Position.y += 1;
+                            Voxels.Add(voxel.Position, voxel);
+                        }
+                            
                     }
                 }
                 #endregion // Disabled for now.
