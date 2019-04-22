@@ -13,7 +13,7 @@ var cam_fov = 70.0;
 var cam_view_sensitivity = 0.3;
 var cam_smooth_lerp = 10;
 var cam_pitch_minmax = Vector2(90, -90);
-
+onready var player = get_node("../Player");
 var is_enabled = false;
 var collision_exception = [];
 

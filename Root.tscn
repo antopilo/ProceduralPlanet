@@ -1,23 +1,18 @@
 [gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://Camera.tscn" type="PackedScene" id=1]
-[ext_resource path="res://Scripts/Generator.cs" type="Script" id=2]
-[ext_resource path="res://Player.tscn" type="PackedScene" id=3]
+[ext_resource path="res://Player.tscn" type="PackedScene" id=2]
+[ext_resource path="res://Scripts/Generator.cs" type="Script" id=3]
 
 [node name="Root" type="Spatial"]
 
 [node name="Camera" parent="." instance=ExtResource( 1 )]
+fov = 56.9
 far = 500.0
 cam = NodePath(".")
 pivot = NodePath("../Player")
 
-[node name="Generator" type="Node" parent="."]
-script = ExtResource( 2 )
-
-[node name="Player" parent="." instance=ExtResource( 3 )]
-
-[node name="GIProbe" type="GIProbe" parent="Player"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3.478, 0 )
+[node name="Player" parent="." instance=ExtResource( 2 )]
 
 [node name="Sun" type="DirectionalLight" parent="."]
 transform = Transform( 0.0672027, 0.670175, -0.739154, -0.197632, 0.735091, 0.648523, 0.97797, 0.102498, 0.181848, 0, 0, 0 )
@@ -29,4 +24,9 @@ shadow_enabled = true
 shadow_color = Color( 0.733333, 0.733333, 0.733333, 1 )
 shadow_bias = -0.04
 directional_shadow_depth_range = 1
+
+[node name="Generator" type="Node" parent="."]
+script = ExtResource( 3 )
+RenderDistance = 12
+UpdateRate = 0.0
 

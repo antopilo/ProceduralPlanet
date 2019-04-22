@@ -125,7 +125,7 @@ public class Chunk : Object
                         // Make our block.
                         Voxel newVoxel = new Voxel()
                         {
-                            Position = voxel.Position + new Vector3(0, scanPosition.y, 0),
+                            Position = voxel.Position + new Vector3(0, scanPosition.y - 1, 0),
                             type = voxel.type
                         };
 
