@@ -1,21 +1,18 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=5 format=2]
 
-[ext_resource path="res://Camera.tscn" type="PackedScene" id=1]
-[ext_resource path="res://Player.tscn" type="PackedScene" id=2]
-[ext_resource path="res://Scripts/Generator.cs" type="Script" id=3]
+[ext_resource path="res://Scripts/Generator.cs" type="Script" id=1]
+[ext_resource path="res://assets/maujoe.camera_control/scripts/camera_control.gd" type="Script" id=2]
+[ext_resource path="res://FORCED SQUARE.ttf" type="DynamicFontData" id=3]
+
+[sub_resource type="DynamicFont" id=1]
+size = 22
+font_data = ExtResource( 3 )
 
 [node name="Root" type="Spatial"]
 
-[node name="Camera" parent="." instance=ExtResource( 1 )]
-fov = 56.9
-far = 500.0
-cam = NodePath(".")
-pivot = NodePath("../Player")
-
-[node name="Player" parent="." instance=ExtResource( 2 )]
-
 [node name="Sun" type="DirectionalLight" parent="."]
 transform = Transform( 0.0672027, 0.670175, -0.739154, -0.197632, 0.735091, 0.648523, 0.97797, 0.102498, 0.181848, 0, 0, 0 )
+light_color = Color( 0.992157, 0.992157, 0.85098, 1 )
 light_energy = 1.16
 light_indirect_energy = 0.0
 light_specular = 0.37
@@ -26,7 +23,24 @@ shadow_bias = -0.04
 directional_shadow_depth_range = 1
 
 [node name="Generator" type="Node" parent="."]
-script = ExtResource( 3 )
-RenderDistance = 12
+script = ExtResource( 1 )
+RenderDistance = 8
 UpdateRate = 0.0
+
+[node name="Camera" type="Camera" parent="."]
+far = 8192.0
+script = ExtResource( 2 )
+smoothness = 0.638
+max_speed = Vector3( 50, 50, 50 )
+
+[node name="info" type="RichTextLabel" parent="."]
+margin_left = 5.0
+margin_top = 6.0
+margin_right = 603.0
+margin_bottom = 220.0
+rect_clip_content = false
+custom_fonts/normal_font = SubResource( 1 )
+text = "ToRenderCount:
+PreloadedCount:
+RenderedCount:"
 

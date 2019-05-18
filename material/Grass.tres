@@ -2,7 +2,4 @@
 
 [resource]
 vertex_color_use_as_albedo = true
-params_specular_mode = 4
-params_line_width = 0.1
-roughness_texture_channel = 3
 
