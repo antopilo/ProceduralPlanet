@@ -87,9 +87,9 @@ public class Generator : Node
 
 
         Threads[0] = new System.Threading.Thread(new System.Threading.ThreadStart(EndPreload));
-        Threads[2] = new System.Threading.Thread(new System.Threading.ThreadStart(RenderThread));
+        Threads[1] = new System.Threading.Thread(new System.Threading.ThreadStart(EndPreload));
         Threads[0].Start();
-        Threads[2].Start();
+        // Threads[1].Start();
     }
 
     /// <summary>
@@ -128,7 +128,6 @@ public class Generator : Node
                     GetChunkData(c1);
                     toRenderPos.TryDequeue(out c1.Offset);
                     PreloadedChunks.TryAdd(c1.Offset, c1);
-                    
                 }
             }
         }
@@ -138,7 +137,7 @@ public class Generator : Node
     {
         while (true)
         {
-            foreach (var c in PreloadedChunks.OrderBy(c=> DistanceToChunk(c.Key)))
+            foreach (var c in PreloadedChunks)
             {
                 Chunk c2 = c.Value;
                 Render(c2);
@@ -163,6 +162,7 @@ public class Generator : Node
                 for (int y = 0; y < pChunk.ChunkSize.y; y++)
                     for (int z = 0; z < pChunk.ChunkSize.z; z++)
                         CreateVoxel(SurfaceTool, new Vector3(x, y, z), pChunk);
+
             SurfaceTool.Index();
 
             MeshInstance chunk = new MeshInstance
@@ -171,23 +171,21 @@ public class Generator : Node
                 Name = pChunk.Offset.ToString(),
                 Translation = new Vector3(pChunk.Offset.x * pChunk.ChunkSize.x, 0, pChunk.Offset.y * pChunk.ChunkSize.z)
             };
+
             chunk.CreateTrimeshCollision();
             chunk.AddToGroup("Chunk");
 
             LoadedChunks.TryAdd(pChunk.Offset, pChunk);
             AddChild(chunk);
 
-            //Tween t = new Tween();
-            //AddChild(t);
+            Tween t = new Tween();
+            AddChild(t);
             ////t.InterpolateProperty(chunk, "scale", new Vector3(0, 0, 0), new Vector3(1, 1, 1), 1f, Tween.TransitionType.Expo, Tween.EaseType.Out);
             ////t.InterpolateProperty(chunk, "translation", chunk.Translation - new Vector3(0, 255 * 2, 0), chunk.Translation, 1f, Tween.TransitionType.Expo, Tween.EaseType.Out);
-            //t.InterpolateProperty(chunk, "albedo_color", new Color(1, 1, 1, 0), new Color(1, 1, 1, 1), 2f, Tween.TransitionType.Linear, Tween.EaseType.InOut);
+            t.InterpolateProperty(chunk, "albedo_color", new Color(1, 1, 1, 0), new Color(1, 1, 1, 1), 2f, Tween.TransitionType.Linear, Tween.EaseType.InOut);
             ////chunk.Scale = new Vector3(0, 0, 0);
-            //t.Start();
+            t.Start();
             SurfaceTool.Clear();
-
-
-
         }
         catch { GD.Print("ERROR IN RENDER."); }
 
@@ -212,16 +210,27 @@ public class Generator : Node
         InfoLabel.Text += "ToRenderCount: " + toRenderPos.Count.ToString() + "\n";
         InfoLabel.Text += "CamPosition: " + "X: " + camX + " Z: " + camZ + "\n";
 
+
+        int count = 0;
+        foreach (var c in PreloadedChunks)
+        {
+            if (count >= 4)
+                break;
+            Chunk c2 = c.Value;
+            Render(c2);
+            PreloadedChunks.TryRemove(c.Key, out c2);
+        }
+
         //foreach (var cl in LoadedChunks.OrderByDescending(c => DistanceToChunk(c.Key)))
         //{
         //    if (DistanceToChunk(cl.Key) >= RenderDistance)
         //    {
-        //        unloadChunk
+        //        unloadChunk(()
         //        Chunk c2 = cl.Value;
         //        LoadedChunks.TryRemove(cl.Key, out c2);
         //        GetNode(cl.Key.ToString()).QueueFree();
         //    }
-        //}
+        
     }
 
     
