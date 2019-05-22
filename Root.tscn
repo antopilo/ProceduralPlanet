@@ -25,9 +25,9 @@ directional_shadow_depth_range = 1
 [node name="Generator" type="Node" parent="."]
 script = ExtResource( 1 )
 RenderDistance = 8
-UpdateRate = 0.0
 
 [node name="Camera" type="Camera" parent="."]
+transform = Transform( 1, 0, 0, 0, 0.106413, 0.994322, 0, -0.994322, 0.106413, 0, 255, 0 )
 far = 8192.0
 script = ExtResource( 2 )
 smoothness = 0.638

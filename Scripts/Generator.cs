@@ -66,30 +66,12 @@ public class Generator : Node
 
         GenerateSeed();
 
-        // Water
-        //Water = new MeshInstance();
-        //WaterMesh = new PlaneMesh();
-        //WaterMesh.Size = new Vector2(ChunkSize.x * RenderDistance * 32, ChunkSize.z * RenderDistance * 32);
-        //WaterMesh.SetMaterial(WaterMaterial);
-        //Water.SetMesh(WaterMesh);
-        //Water.Translation = new Vector3(0, WaterLevel - WaterOffset, 0);
-        //AddChild(Water);
+        Threads[1] = new System.Threading.Thread(new System.Threading.ThreadStart(RenderThread));
+        Threads[2] = new System.Threading.Thread(new System.Threading.ThreadStart(Preload));
+        Threads[1].Start();
+        Threads[2].Start();
+        Threads[1].Priority = System.Threading.ThreadPriority.Highest;
 
-        //camX = (int)Mathf.Stepify(Camera.Transform.origin.x / ChunkSize.x, 1);
-        //camZ = (int)Mathf.Stepify(Camera.Transform.origin.z / ChunkSize.z, 1);
-        //for (int x = -RenderDistance + camX; x < RenderDistance + camX ; x++)
-        //    for (int z = -RenderDistance + camZ ; z < RenderDistance + camZ ; z++)
-        //        if (!PreloadedChunks.ContainsKey(new Vector2(x, z)) && !LoadedChunks.ContainsKey(new Vector2(x, z)) && !toRenderPos.Contains(new Vector2(x, z)))
-        //        {
-        //            toRenderPos.Enqueue(new Vector2(x, z));
-        //        }
-
-
-
-        Threads[0] = new System.Threading.Thread(new System.Threading.ThreadStart(EndPreload));
-        Threads[1] = new System.Threading.Thread(new System.Threading.ThreadStart(EndPreload));
-        Threads[0].Start();
-        // Threads[1].Start();
     }
 
     /// <summary>
@@ -116,21 +98,44 @@ public class Generator : Node
         Noise2.Persistence = 0.7f;
     }
 
-    public void EndPreload()
+    public void Preload()
     {
         while (true)
         {
-            foreach (var c in toRenderPos)
+            foreach (var chunkPosition in toRenderPos)
             {
-                Chunk c1 = new Chunk(c, Noise);
-                if (!PreloadedChunks.ContainsKey(c1.Offset) && !LoadedChunks.ContainsKey(c1.Offset))
+                var chunkPos = new Vector2((int)chunkPosition.x, (int)chunkPosition.y);
+                Chunk chunk = new Chunk((int)chunkPosition.x, (int)chunkPosition.y);
+                if (!PreloadedChunks.ContainsKey(chunkPos) && !LoadedChunks.ContainsKey(chunkPos))
                 {
-                    GetChunkData(c1);
-                    toRenderPos.TryDequeue(out c1.Offset);
-                    PreloadedChunks.TryAdd(c1.Offset, c1);
+                    
+                    GetChunkData(chunk);
+                    PreloadedChunks.TryAdd(chunk.Offset, chunk);
+                    toRenderPos.TryDequeue(out chunk.Offset);
+                    
+                    //PreloadedChunks.TryRemove(chunk.Offset, out chunk);
                 }
+
+                
             }
         }
+    }
+
+    public bool ChunkSurrounded(Vector2 position)
+    {
+        try
+        {
+            var left = PreloadedChunks.ContainsKey(position + new Vector2(1, 0)) || LoadedChunks.ContainsKey(position + new Vector2(1, 0));
+            var right = PreloadedChunks.ContainsKey(position - new Vector2(1, 0)) || LoadedChunks.ContainsKey(position - new Vector2(1, 0));
+            var behind = PreloadedChunks.ContainsKey(position + new Vector2(0, 1)) || LoadedChunks.ContainsKey(position + new Vector2(0, 1));
+            var front = PreloadedChunks.ContainsKey(position - new Vector2(0, 1)) || LoadedChunks.ContainsKey(position - new Vector2(0, 1));
+            return left && right && behind && front;
+        }
+        catch
+        {
+            return false;
+        }
+        
     }
 
     public void RenderThread()
@@ -139,9 +144,12 @@ public class Generator : Node
         {
             foreach (var c in PreloadedChunks)
             {
+                if (!ChunkSurrounded(c.Key))
+                    continue;
+
                 Chunk c2 = c.Value;
                 Render(c2);
-                PreloadedChunks.TryRemove(c.Key, out c2);
+                //PreloadedChunks.TryRemove(c.Key, out c2);
             }
         }
     }
@@ -155,13 +163,18 @@ public class Generator : Node
 
             SurfaceTool = new SurfaceTool();
             SurfaceTool.Begin(Mesh.PrimitiveType.Triangles);
-            Material mat = VoxMaterial.Duplicate() as Material;
+            Material mat = VoxMaterial as Material;
             SurfaceTool.SetMaterial(mat);
 
-            for (int x = 0; x < pChunk.ChunkSize.x; x++)
-                for (int y = 0; y < pChunk.ChunkSize.y; y++)
-                    for (int z = 0; z < pChunk.ChunkSize.z; z++)
-                        CreateVoxel(SurfaceTool, new Vector3(x, y, z), pChunk);
+            for (int x = 0; x < Chunk.ChunkSize.x; x++)
+                for (int y = 0; y < Chunk.ChunkSize.y; y++)
+                    for (int z = 0; z < Chunk.ChunkSize.z; z++)
+                    {
+                        if (!pChunk.Voxels[x, y, z].Active)
+                            continue;
+                        CreateVoxel(SurfaceTool, x, y, z, pChunk);
+                       
+                    }
 
             SurfaceTool.Index();
 
@@ -169,23 +182,25 @@ public class Generator : Node
             {
                 Mesh = SurfaceTool.Commit(),
                 Name = pChunk.Offset.ToString(),
-                Translation = new Vector3(pChunk.Offset.x * pChunk.ChunkSize.x, 0, pChunk.Offset.y * pChunk.ChunkSize.z)
+                Translation = new Vector3(pChunk.Offset.x * Chunk.ChunkSize.x, 0, pChunk.Offset.y * Chunk.ChunkSize.z)
             };
-
-            chunk.CreateTrimeshCollision();
+            //chunk.CreateTrimeshCollision();
             chunk.AddToGroup("Chunk");
 
             LoadedChunks.TryAdd(pChunk.Offset, pChunk);
             AddChild(chunk);
 
-            Tween t = new Tween();
-            AddChild(t);
+            //Tween t = new Tween();
+            //AddChild(t);
             ////t.InterpolateProperty(chunk, "scale", new Vector3(0, 0, 0), new Vector3(1, 1, 1), 1f, Tween.TransitionType.Expo, Tween.EaseType.Out);
             ////t.InterpolateProperty(chunk, "translation", chunk.Translation - new Vector3(0, 255 * 2, 0), chunk.Translation, 1f, Tween.TransitionType.Expo, Tween.EaseType.Out);
-            t.InterpolateProperty(chunk, "albedo_color", new Color(1, 1, 1, 0), new Color(1, 1, 1, 1), 2f, Tween.TransitionType.Linear, Tween.EaseType.InOut);
+            //t.InterpolateProperty(chunk, "albedo_color", new Color(1, 1, 1, 0), new Color(1, 1, 1, 1), 2f, Tween.TransitionType.Linear, Tween.EaseType.InOut);
             ////chunk.Scale = new Vector3(0, 0, 0);
-            t.Start();
+            //t.Start();
             SurfaceTool.Clear();
+
+
+
         }
         catch { GD.Print("ERROR IN RENDER."); }
 
@@ -202,7 +217,6 @@ public class Generator : Node
                     toRenderPos.Enqueue(new Vector2(x, z));
                 }
 
-
         InfoLabel.Clear();
         InfoLabel.Text += "FPS: " + Engine.GetFramesPerSecond() + "\n";
         InfoLabel.Text += "PreloadedCount: " + PreloadedChunks.Count.ToString() + "\n";
@@ -210,43 +224,49 @@ public class Generator : Node
         InfoLabel.Text += "ToRenderCount: " + toRenderPos.Count.ToString() + "\n";
         InfoLabel.Text += "CamPosition: " + "X: " + camX + " Z: " + camZ + "\n";
 
-
-        int count = 0;
-        foreach (var c in PreloadedChunks)
+        foreach (var cl in LoadedChunks.OrderByDescending(c => DistanceToChunk(c.Key)))
         {
-            if (count >= 4)
-                break;
-            Chunk c2 = c.Value;
-            Render(c2);
-            PreloadedChunks.TryRemove(c.Key, out c2);
+            if (DistanceToChunk(cl.Key) >= RenderDistance)
+            {
+                
+                Chunk c2 = cl.Value;
+                LoadedChunks.TryRemove(cl.Key, out c2);
+                GetNode(cl.Key.ToString()).QueueFree();
+            }
         }
-
-        //foreach (var cl in LoadedChunks.OrderByDescending(c => DistanceToChunk(c.Key)))
-        //{
-        //    if (DistanceToChunk(cl.Key) >= RenderDistance)
-        //    {
-        //        unloadChunk(()
-        //        Chunk c2 = cl.Value;
-        //        LoadedChunks.TryRemove(cl.Key, out c2);
-        //        GetNode(cl.Key.ToString()).QueueFree();
-        //    }
-        
     }
 
     
     // Create each faces of a single voxel at pPositon in cPosition chunk.
     // TODO: Remove Surfacetool parameter.
-    private static void CreateVoxel(SurfaceTool pSurfaceTool, Vector3 pPosition, Chunk pChunk)
+    private void CreateVoxel(SurfaceTool pSurfaceTool, int x, int y, int z, Chunk pChunk)
     {
-        if (!pChunk.Voxels[(int)pPosition.x, (int)pPosition.y, (int)pPosition.z].Active)
+        if (!pChunk.Voxels[x, y ,z].Active)
+            return; 
+            
+        bool left   = x != 0 ? !pChunk.Voxels[x - 1, y, z].Active : true;
+        bool right  = x != 15 ? !pChunk.Voxels[x + 1, y, z].Active : true;
+        bool front  = z != 15 ? !pChunk.Voxels[x, y, z + 1].Active : true;
+        bool back   = z != 0 ? !pChunk.Voxels[x, y, z - 1].Active : true;
+        bool top    = y != 254 ? !pChunk.Voxels[x, y + 1, z].Active : true;
+        bool bottom = y > 0   ? !pChunk.Voxels[x, y - 1, z].Active : true;
+
+        bool left2 = (x == 0 && PreloadedChunks[new Vector2(pChunk.Offset - new Vector2(1, 0))].Voxels[15, y, z].Active);
+        bool right2 = (x == 15 && PreloadedChunks[new Vector2(pChunk.Offset + new Vector2(1, 0))].Voxels[0, y, z].Active);
+        bool back2 = (z == 0 && PreloadedChunks[new Vector2(pChunk.Offset - new Vector2(0, 1))].Voxels[x, y, 15].Active);
+        bool front2 = (z == 15 && PreloadedChunks[new Vector2(pChunk.Offset + new Vector2(0, 1))].Voxels[x, y, 0].Active);
+
+        //GD.Print(PreloadedChunks[new Vector2(pChunk.Offset - new Vector2(1, 0))].Voxels[15, y, z].Active);
+        if (left && right && front && back && top && bottom)
             return;
 
-        var type = pChunk.Voxels[(int)pPosition.x, (int)pPosition.y, (int)pPosition.z].Type;
+        var type = pChunk.Voxels[x, y, z].Type;
+
         // Colors
         switch (type)
         {
             case BlockType.grass: // Grass
-                pSurfaceTool.AddColor(new Color("6aff26").Darkened(pPosition.y / 256 / 50));
+                pSurfaceTool.AddColor(new Color("6aff26").Darkened(y / 256 / 50));
                 break;
             case BlockType.rock: // Rock
                 pSurfaceTool.AddColor(new Color("3d475b"));
@@ -265,124 +285,67 @@ public class Generator : Node
                 break;
         }
 
-        bool left = pPosition.x != 0 ? !pChunk.Voxels[(int)pPosition.x - 1, (int)pPosition.y, (int)pPosition.z].Active : true;
-        bool right = pPosition.x != 15 ? !pChunk.Voxels[(int)pPosition.x + 1, (int)pPosition.y, (int)pPosition.z].Active : true;
-        bool front = pPosition.z != 15 ? !pChunk.Voxels[(int)pPosition.x, (int)pPosition.y, (int)pPosition.z + 1].Active : true;
-        bool back = pPosition.z != 0 ? !pChunk.Voxels[(int)pPosition.x, (int)pPosition.y, (int)pPosition.z - 1].Active : true;
-        bool top = pPosition.y != 0 ?  !pChunk.Voxels[(int)pPosition.x, (int)pPosition.y + 1, (int)pPosition.z].Active : true;
-        bool bottom = pPosition.y != 254 ? !pChunk.Voxels[(int)pPosition.x, (int)pPosition.y - 1, (int)pPosition.z ].Active : true;
-
-        // If block is hidden.
-        //if (left && right && front && back && top && bottom || pPosition.y < 0)
-        //  return;
-
+        Vector3 vertextOffset = new Vector3(x, y, z);
         if (top) // Above
         {
             pSurfaceTool.AddNormal(new Vector3(0, 1, 0));
-            pSurfaceTool.AddVertex(Vertices[4] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[5] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[7] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[5] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[6] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[7] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[4] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[5] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[7] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[5] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[6] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[7] + vertextOffset);
         }
-        if (right) // Right
+        if (right && !right2) // Right
         {
             pSurfaceTool.AddNormal(new Vector3(1, 0, 0));
-            pSurfaceTool.AddVertex(Vertices[2] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[5] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[1] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[2] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[6] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[5] + pPosition);
-            //if (pPosition.x != ChunkSize.x - 1)
-            //{
-            //        pSurfaceTool.AddNormal(new Vector3(1, 0, 0));
-            //        pSurfaceTool.AddVertex(Vertices[2] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[5] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[1] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[2] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[6] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[5] + pPosition);
-            //}
-            //else if(PreloadedChunks.ContainsKey(pChunk.Offset + new Vector2(1, 0)))
-            //{
-            //    Chunk nb = PreloadedChunks[pChunk.Offset + new Vector2(1, 0)] as Chunk;
-            //    if (!nb.Voxels.ContainsKey(new Vector3(0, pPosition.y, pPosition.z)))
-            //    {
-            //        pSurfaceTool.AddNormal(new Vector3(1, 0, 0));
-            //        pSurfaceTool.AddVertex(Vertices[2] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[5] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[1] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[2] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[6] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[5] + pPosition);
-            //    }
-            //}
+            pSurfaceTool.AddVertex(Vertices[2] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[5] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[1] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[2] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[6] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[5] + vertextOffset);
+            
         }
-        if (left) // Left
+        if (left && !left2) // Left
         {
             pSurfaceTool.AddNormal(new Vector3(-1, 0, 0));
-            pSurfaceTool.AddVertex(Vertices[0] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[7] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[3] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[0] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[4] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[7] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[0] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[7] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[3] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[0] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[4] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[7] + vertextOffset);
         }
-        if (front) // Front
+        if (front && !front2) // Front
         {
             pSurfaceTool.AddNormal(new Vector3(0, 0, 1));
-            pSurfaceTool.AddVertex(Vertices[3] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[6] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[2] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[3] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[7] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[6] + pPosition);
-            //if (pPosition.z != ChunkSize.z - 1)
-            //{
-            //    pSurfaceTool.AddNormal(new Vector3(0, 0, 1));
-            //    pSurfaceTool.AddVertex(Vertices[3] + pPosition);
-            //    pSurfaceTool.AddVertex(Vertices[6] + pPosition);
-            //    pSurfaceTool.AddVertex(Vertices[2] + pPosition);
-            //    pSurfaceTool.AddVertex(Vertices[3] + pPosition);
-            //    pSurfaceTool.AddVertex(Vertices[7] + pPosition);
-            //    pSurfaceTool.AddVertex(Vertices[6] + pPosition);
-            //}
-            //else if (PreloadedChunks.ContainsKey(pChunk.Offset + new Vector2(0, 1)))
-            //{
-            //    Chunk nb = PreloadedChunks[pChunk.Offset + new Vector2(0, 1)] as Chunk;
-            //    if (!nb.Voxels.ContainsKey(new Vector3(pPosition.x, pPosition.y, 0)))
-            //    {
-            //        pSurfaceTool.AddNormal(new Vector3(0, 0, 1));
-            //        pSurfaceTool.AddVertex(Vertices[3] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[6] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[2] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[3] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[7] + pPosition);
-            //        pSurfaceTool.AddVertex(Vertices[6] + pPosition);
-            //    }
-            //}
+            pSurfaceTool.AddVertex(Vertices[3] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[6] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[2] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[3] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[7] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[6] + vertextOffset);
         }
-        if (back) // Above
+        if (back && !back2) // Above
         {
             pSurfaceTool.AddNormal(new Vector3(0, 0, -1));
-            pSurfaceTool.AddVertex(Vertices[0] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[1] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[5] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[5] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[4] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[0] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[0] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[1] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[5] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[5] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[4] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[0] + vertextOffset);
         }
-        if (bottom)
+        if (bottom && y != 0)
         {
             pSurfaceTool.AddNormal(new Vector3(0, 1, 0));
-            pSurfaceTool.AddVertex(Vertices[1] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[3] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[2] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[1] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[0] + pPosition);
-            pSurfaceTool.AddVertex(Vertices[3] + pPosition);
+            pSurfaceTool.AddVertex(Vertices[1] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[3] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[2] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[1] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[0] + vertextOffset);
+            pSurfaceTool.AddVertex(Vertices[3] + vertextOffset);
         }
     }
 
@@ -390,17 +353,19 @@ public class Generator : Node
     public void GetChunkData(Chunk chunk)
     {
         var Offset = chunk.Offset;
-
         for (int z = 0; z < ChunkSize.z ; z += 1)
             for (int x = 0; x < ChunkSize.x ; x += 1)
             {
                 // Global position in the noise.
                 Vector2 globalPosition = new Vector2((Offset.x * ChunkSize.x) + x, (Offset.y * ChunkSize.z) + z);
+
                 float height = Mathf.Stepify(((Noise.GetNoise2dv(globalPosition) + 0.5f) * (ChunkSize.y / 2) ), 1);
                 BlockType type = BlockType.grass;
+
                 if (height <= WaterLevel)
                     type = BlockType.sand;
-                for (int i = (int)height - 5; i <= height; i++)
+
+                for (int i = 0; i <= height; i++)
                 {
                     chunk.Voxels[x, i, z].Active = true;
                     chunk.Voxels[x, i, z].Type = type;
@@ -414,12 +379,11 @@ public class Generator : Node
     {
         for (int y = (int)height; y < (int)ChunkSize.y - 1; y++)
         {
-            Vector3 positionAir = new Vector3(x, y, z);
             if (chunk.Voxels[(int)x, (int)y, (int)z].Active) // Skip ground 0 vox place earlier.
                 continue;
 
             Vector3 OffsetGlobal = new Vector3(chunk.Offset.x * ChunkSize.x, 0, chunk.Offset.y * ChunkSize.z); // Global position in noise.
-            float density = Noise2.GetNoise3dv(positionAir + OffsetGlobal); // Density in the noise.
+            float density = Noise2.GetNoise3d(x + OffsetGlobal.x, y + OffsetGlobal.y, z + OffsetGlobal.z); // Density in the noise.
             float DensityModifier = ((y / 3.33f / ChunkSize.y) * 2);
             if (density - DensityModifier >= 0 )
             {
