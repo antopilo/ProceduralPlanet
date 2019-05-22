@@ -104,18 +104,15 @@ public class Generator : Node
         {
             foreach (var chunkPosition in toRenderPos)
             {
-                var chunkPos = new Vector2((int)chunkPosition.x, (int)chunkPosition.y);
-                Chunk chunk = new Chunk((int)chunkPosition.x, (int)chunkPosition.y);
-                if (!PreloadedChunks.ContainsKey(chunkPos) && !LoadedChunks.ContainsKey(chunkPos))
+                if (!PreloadedChunks.ContainsKey(chunkPosition) && !LoadedChunks.ContainsKey(chunkPosition))
                 {
-                    
+                    Chunk chunk = new Chunk((int)chunkPosition.x, (int)chunkPosition.y);
                     GetChunkData(chunk);
                     PreloadedChunks.TryAdd(chunk.Offset, chunk);
                     toRenderPos.TryDequeue(out chunk.Offset);
                     
                     //PreloadedChunks.TryRemove(chunk.Offset, out chunk);
                 }
-
                 
             }
         }
@@ -170,6 +167,8 @@ public class Generator : Node
                 for (int y = 0; y < Chunk.ChunkSize.y; y++)
                     for (int z = 0; z < Chunk.ChunkSize.z; z++)
                     {
+                        if (y + 1 % 16 == 0 && pChunk.GetFlag(y))
+                            y += 16;
                         if (!pChunk.Voxels[x, y, z].Active)
                             continue;
                         CreateVoxel(SurfaceTool, x, y, z, pChunk);
@@ -224,14 +223,18 @@ public class Generator : Node
         InfoLabel.Text += "ToRenderCount: " + toRenderPos.Count.ToString() + "\n";
         InfoLabel.Text += "CamPosition: " + "X: " + camX + " Z: " + camZ + "\n";
 
-        foreach (var cl in LoadedChunks.OrderByDescending(c => DistanceToChunk(c.Key)))
+        int count = 0;
+        foreach (var cl in LoadedChunks)
         {
+            if (count >= 8)
+                return;
             if (DistanceToChunk(cl.Key) >= RenderDistance)
             {
-                
+
                 Chunk c2 = cl.Value;
                 LoadedChunks.TryRemove(cl.Key, out c2);
                 GetNode(cl.Key.ToString()).QueueFree();
+                count++;
             }
         }
     }
@@ -251,14 +254,16 @@ public class Generator : Node
         bool top    = y != 254 ? !pChunk.Voxels[x, y + 1, z].Active : true;
         bool bottom = y > 0   ? !pChunk.Voxels[x, y - 1, z].Active : true;
 
+        if (left && right && front && back && top && bottom)
+            return;
+
         bool left2 = (x == 0 && PreloadedChunks[new Vector2(pChunk.Offset - new Vector2(1, 0))].Voxels[15, y, z].Active);
         bool right2 = (x == 15 && PreloadedChunks[new Vector2(pChunk.Offset + new Vector2(1, 0))].Voxels[0, y, z].Active);
         bool back2 = (z == 0 && PreloadedChunks[new Vector2(pChunk.Offset - new Vector2(0, 1))].Voxels[x, y, 15].Active);
         bool front2 = (z == 15 && PreloadedChunks[new Vector2(pChunk.Offset + new Vector2(0, 1))].Voxels[x, y, 0].Active);
 
         //GD.Print(PreloadedChunks[new Vector2(pChunk.Offset - new Vector2(1, 0))].Voxels[15, y, z].Active);
-        if (left && right && front && back && top && bottom)
-            return;
+        
 
         var type = pChunk.Voxels[x, y, z].Type;
 
@@ -357,9 +362,9 @@ public class Generator : Node
             for (int x = 0; x < ChunkSize.x ; x += 1)
             {
                 // Global position in the noise.
-                Vector2 globalPosition = new Vector2((Offset.x * ChunkSize.x) + x, (Offset.y * ChunkSize.z) + z);
-
-                float height = Mathf.Stepify(((Noise.GetNoise2dv(globalPosition) + 0.5f) * (ChunkSize.y / 2) ), 1);
+                
+                int gX = ((int)Offset.x * (int)Chunk.ChunkSize.x) + x, gZ = ((int)Offset.y * (int)Chunk.ChunkSize.z) + z;
+                float height = Mathf.Stepify(((Noise.GetNoise2d(gX, gZ) + 0.5f) * (ChunkSize.y / 2) ), 1);
                 BlockType type = BlockType.grass;
 
                 if (height <= WaterLevel)

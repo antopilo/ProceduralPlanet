@@ -23,6 +23,8 @@ public class Chunk : Object
     public static Vector3 ChunkSize = new Vector3(16, 255, 16);
     public Vector2 Offset;
     public Voxel[,,] Voxels = new Voxel[16,255,16];
+
+    public bool[] renderFlags = new bool[15];
     
     // Returns the highest voxels at X Z.
     public int HighestAt(int x, int z)
@@ -36,6 +38,24 @@ public class Chunk : Object
         return 0;
     }
 
+    public bool GetFlag(int idx)
+    {
+        bool? initialValue = null;
+        for (int i = 16 * idx; i < 16 * idx + 16; i++)
+        {
+            for (int x = 0; x < ChunkSize.x; x++)
+            {
+                for (int z = 0; z < ChunkSize.z; z++)
+                {
+                    if (initialValue is null) initialValue = Voxels[x, i, z].Active;
+                    if (Voxels[x, i, z].Active != initialValue)
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public Chunk(int offsetX, int offsetZ)
     {
         // Passing in the seed.
@@ -47,6 +67,11 @@ public class Chunk : Object
                 {
                     Voxels[x, y, z] = new Voxel() { Active = false, Type = BlockType.grass};
                 }
+
+        for (int i = 0; i < 15; i++)
+        {
+            renderFlags[i] = false;
+        }
     }
 
    
