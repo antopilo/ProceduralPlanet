@@ -40,15 +40,14 @@ public class Chunk : Object
 
     public bool GetFlag(int idx)
     {
-        bool? initialValue = null;
-        for (int i = 16 * idx; i < 16 * idx + 16; i++)
+        
+        for (int i = idx; i < idx + 16; i++)
         {
             for (int x = 0; x < ChunkSize.x; x++)
             {
                 for (int z = 0; z < ChunkSize.z; z++)
                 {
-                    if (initialValue is null) initialValue = Voxels[x, i, z].Active;
-                    if (Voxels[x, i, z].Active != initialValue)
+                    if (Voxels[x, i, z].Active != false)
                         return true;
                 }
             }

@@ -163,17 +163,25 @@ public class Generator : Node
             Material mat = VoxMaterial as Material;
             SurfaceTool.SetMaterial(mat);
 
-            for (int x = 0; x < Chunk.ChunkSize.x; x++)
-                for (int y = 0; y < Chunk.ChunkSize.y; y++)
+
+            for (int y = 0; y < Chunk.ChunkSize.y; y++)
+            {
+                if ((y + 1) % 16 == 0 && !pChunk.GetFlag(y))
+                {
+                    y += 16;
+                }
+
+                for (int x = 0; x < Chunk.ChunkSize.x; x++)
                     for (int z = 0; z < Chunk.ChunkSize.z; z++)
                     {
-                        if (y + 1 % 16 == 0 && pChunk.GetFlag(y))
-                            y += 16;
+
+
                         if (!pChunk.Voxels[x, y, z].Active)
                             continue;
                         CreateVoxel(SurfaceTool, x, y, z, pChunk);
-                       
+
                     }
+            }
 
             SurfaceTool.Index();
 
@@ -223,20 +231,20 @@ public class Generator : Node
         InfoLabel.Text += "ToRenderCount: " + toRenderPos.Count.ToString() + "\n";
         InfoLabel.Text += "CamPosition: " + "X: " + camX + " Z: " + camZ + "\n";
 
-        int count = 0;
-        foreach (var cl in LoadedChunks)
-        {
-            if (count >= 8)
-                return;
-            if (DistanceToChunk(cl.Key) >= RenderDistance)
-            {
+        //int count = 0;
+        //foreach (var cl in LoadedChunks)
+        //{
+        //    if (count >= 8)
+        //        return;
+        //    if (DistanceToChunk(cl.Key) >= RenderDistance)
+        //    {
 
-                Chunk c2 = cl.Value;
-                LoadedChunks.TryRemove(cl.Key, out c2);
-                GetNode(cl.Key.ToString()).QueueFree();
-                count++;
-            }
-        }
+        //        Chunk c2 = cl.Value;
+        //        LoadedChunks.TryRemove(cl.Key, out c2);
+        //        GetNode(cl.Key.ToString()).QueueFree();
+        //        count++;
+        //    }
+        //}
     }
 
     
