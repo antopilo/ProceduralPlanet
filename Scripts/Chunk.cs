@@ -18,7 +18,7 @@ public struct Voxel
     public bool Active;
 }
 
-public class Chunk : Object
+public class Chunk : Spatial
 {
     public static Vector3 ChunkSize = new Vector3(16, 255, 16);
     public Vector2 Offset;
@@ -38,41 +38,20 @@ public class Chunk : Object
         return 0;
     }
 
-    public bool GetFlag(int idx)
-    {
-        
-        for (int i = idx; i < idx + 16; i++)
-        {
-            for (int x = 0; x < ChunkSize.x; x++)
-            {
-                for (int z = 0; z < ChunkSize.z; z++)
-                {
-                    if (Voxels[x, i, z].Active != false)
-                        return true;
-                }
-            }
-        }
-        return false;
-    }
-
     public Chunk(int offsetX, int offsetZ)
     {
         // Passing in the seed.
         Offset = new Vector2(offsetX, offsetZ);
-
         for (int x = 0; x < ChunkSize.x; x++)
             for (int y = 0; y < ChunkSize.y; y++)
                 for (int z = 0; z < ChunkSize.z; z++)
                 {
                     Voxels[x, y, z] = new Voxel() { Active = false, Type = BlockType.grass};
                 }
-
-        for (int i = 0; i < 15; i++)
-        {
-            renderFlags[i] = false;
-        }
     }
 
-   
+    
+
+  
 }
 

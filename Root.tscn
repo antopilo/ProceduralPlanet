@@ -1,8 +1,10 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://Scripts/Generator.cs" type="Script" id=1]
 [ext_resource path="res://assets/maujoe.camera_control/scripts/camera_control.gd" type="Script" id=2]
 [ext_resource path="res://FORCED SQUARE.ttf" type="DynamicFontData" id=3]
+[ext_resource path="res://models/grass.tres" type="ArrayMesh" id=4]
+[ext_resource path="res://Shaders/grassMaterial.tres" type="Material" id=5]
 
 [sub_resource type="DynamicFont" id=1]
 size = 22
@@ -11,27 +13,25 @@ font_data = ExtResource( 3 )
 [node name="Root" type="Spatial"]
 
 [node name="Sun" type="DirectionalLight" parent="."]
-transform = Transform( 0.0672027, 0.670175, -0.739154, -0.197632, 0.735091, 0.648523, 0.97797, 0.102498, 0.181848, 0, 0, 0 )
-light_color = Color( 0.992157, 0.992157, 0.85098, 1 )
-light_energy = 1.16
+transform = Transform( 0.0672027, 0.670175, -0.739154, -0.715857, 0.548433, 0.432168, 0.695005, 0.500086, 0.516606, 0, 0, 0 )
+light_color = Color( 1, 1, 0.894118, 1 )
+light_energy = 0.75
 light_indirect_energy = 0.0
 light_specular = 0.37
 light_bake_mode = 2
 shadow_enabled = true
-shadow_color = Color( 0.733333, 0.733333, 0.733333, 1 )
-shadow_bias = -0.04
 directional_shadow_depth_range = 1
 
 [node name="Generator" type="Node" parent="."]
 script = ExtResource( 1 )
-RenderDistance = 8
 
 [node name="Camera" type="Camera" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.106413, 0.994322, 0, -0.994322, 0.106413, 0, 255, 0 )
 far = 8192.0
 script = ExtResource( 2 )
-smoothness = 0.638
-max_speed = Vector3( 50, 50, 50 )
+smoothness = 0.745
+acceleration = 0.522
+max_speed = Vector3( 40, 40, 40 )
 
 [node name="info" type="RichTextLabel" parent="."]
 margin_left = 5.0
@@ -43,4 +43,9 @@ custom_fonts/normal_font = SubResource( 1 )
 text = "ToRenderCount:
 PreloadedCount:
 RenderedCount:"
+
+[node name="MeshInstance" type="MeshInstance" parent="."]
+transform = Transform( 0.125, 0, 0, 0, 0.125, 0, 0, 0, 0.125, 0, 0, 0 )
+mesh = ExtResource( 4 )
+material/0 = ExtResource( 5 )
 

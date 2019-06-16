@@ -1,0 +1,13 @@
+[remap]
+
+importer="MagicaVoxel-Importer"
+type="ArrayMesh"
+path="res://.import/Oak1.vox-5e4736e308ed26a7282261ed4b191da0.tres"
+
+[deps]
+
+source_file="res://models/trees/Oak1.vox"
+dest_files=[ "res://.import/Oak1.vox-5e4736e308ed26a7282261ed4b191da0.tres" ]
+
+[params]
+

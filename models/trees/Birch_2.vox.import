@@ -1,0 +1,13 @@
+[remap]
+
+importer="MagicaVoxel-Importer"
+type="ArrayMesh"
+path="res://.import/Birch_2.vox-139eb118d5fe638400b653b4789fc09d.tres"
+
+[deps]
+
+source_file="res://models/trees/Birch_2.vox"
+dest_files=[ "res://.import/Birch_2.vox-139eb118d5fe638400b653b4789fc09d.tres" ]
+
+[params]
+

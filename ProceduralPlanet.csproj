@@ -53,6 +53,7 @@
     <Compile Include="Scripts\Chunk.cs" />
     <Compile Include="Scripts\Generator.cs" />
     <Compile Include="Scripts\Tree.cs" />
+    <Compile Include="Scripts\VoxelFactory.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

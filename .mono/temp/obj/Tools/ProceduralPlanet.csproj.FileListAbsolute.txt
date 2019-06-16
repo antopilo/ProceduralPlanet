@@ -16,3 +16,9 @@ C:\Users\Antoine\Desktop\ProceduralPlanet\.mono\temp\obj\Tools\ProceduralPlanet.
 C:\Users\Antoine\Desktop\ProceduralPlanet\.mono\temp\obj\Tools\ProceduralPlanet.csproj.CoreCompileInputs.cache
 C:\Users\Antoine\Desktop\ProceduralPlanet\.mono\temp\obj\Tools\ProceduralPlanet.dll
 C:\Users\Antoine\Desktop\ProceduralPlanet\.mono\temp\obj\Tools\ProceduralPlanet.pdb
+F:\Desktop\Projets\ProceduralPlanet\.mono\temp\bin\Tools\ProceduralPlanet.dll
+F:\Desktop\Projets\ProceduralPlanet\.mono\temp\bin\Tools\ProceduralPlanet.pdb
+F:\Desktop\Projets\ProceduralPlanet\.mono\temp\obj\Tools\ProceduralPlanet.csprojAssemblyReference.cache
+F:\Desktop\Projets\ProceduralPlanet\.mono\temp\obj\Tools\ProceduralPlanet.csproj.CoreCompileInputs.cache
+F:\Desktop\Projets\ProceduralPlanet\.mono\temp\obj\Tools\ProceduralPlanet.dll
+F:\Desktop\Projets\ProceduralPlanet\.mono\temp\obj\Tools\ProceduralPlanet.pdb
