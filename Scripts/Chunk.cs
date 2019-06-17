@@ -2,24 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public enum BlockType
-{
-    grass = 0,
-    rock = 1,
-    sand = 3,
-    wood = 4,
-    leaves = 5,
-    snow
-}
-
-// A single voxel.
-public struct Voxel
-{
-    public BlockType Type;
-    public bool Active;
-}
-
-
 public class Chunk : Spatial
 {
     public static Vector3 ChunkSize = new Vector3(16, 255, 16);
@@ -30,7 +12,6 @@ public class Chunk : Spatial
     public float AverageHumidity = 0;
     public Biomes Biome;
 
-
     // Returns the highest voxels at X Z.
     public int HighestAt(int x, int z)
     {
@@ -40,6 +21,7 @@ public class Chunk : Spatial
             if (Voxels[x, y, z].Active)
                 return y;
         }
+
         return 0;
     }
 
@@ -47,15 +29,19 @@ public class Chunk : Spatial
     {
         // Passing in the seed.
         Offset = new Vector2(offsetX, offsetZ);
+
+        // Filling the chunk with empty voxels.
         for (int x = 0; x < ChunkSize.x; x++)
             for (int y = 0; y < ChunkSize.y; y++)
                 for (int z = 0; z < ChunkSize.z; z++)
                 {
-                    Voxels[x, y, z] = new Voxel() {
-                            Active = false, 
-                            Type = BlockType.grass
-                         };
+                    Voxels[x, y, z] = new Voxel()
+                    {
+                        Active = false, 
+                        Type = BlockType.grass
+                    };
                 }
+        
         
         var globalPosition = new Vector2(offsetX * ChunkSize.x, offsetZ * ChunkSize.z);
 

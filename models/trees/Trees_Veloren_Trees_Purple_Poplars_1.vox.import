@@ -1,0 +1,13 @@
+[remap]
+
+importer="MagicaVoxel-Importer"
+type="ArrayMesh"
+path="res://.import/Trees_Veloren_Trees_Purple_Poplars_1.vox-e18d60156a7c1c57fdb97dc32d323d0c.tres"
+
+[deps]
+
+source_file="res://models/trees/Trees_Veloren_Trees_Purple_Poplars_1.vox"
+dest_files=[ "res://.import/Trees_Veloren_Trees_Purple_Poplars_1.vox-e18d60156a7c1c57fdb97dc32d323d0c.tres" ]
+
+[params]
+

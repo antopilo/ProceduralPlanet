@@ -1,4 +1,5 @@
 using Godot;
+using ProceduralPlanet.Scripts.Biomes;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,10 +11,9 @@ public class Generator : Node
     private static OpenSimplexNoise Noise = new OpenSimplexNoise();
     private static OpenSimplexNoise Noise2 = new OpenSimplexNoise();
 
-    public static OpenSimplexNoise TempNoise = new OpenSimplexNoise();
+    public static OpenSimplexNoise ColorNoise = new OpenSimplexNoise();
     private static RandomNumberGenerator rng = new RandomNumberGenerator();
 
-    private static int WaterLevel = 62;
     private static int camX = 0, camZ = 0;
     private Camera Camera;
     private SurfaceTool SurfaceTool;
@@ -42,32 +42,21 @@ public class Generator : Node
 
 
     // Mesh and models
-    private ArrayMesh GrassModel;
     private ShaderMaterial GrassMaterial;
 
 
-    private float TreeMinTemp = 0f;
-    private float TreeMaxTemp = 0.5f;
-    // Trees
-    private ArrayMesh Birch1, Birch2, Willows1, Oak1;
-
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
-    {   
+    {
         // Getting references to other nodes
         Camera = GetNode("../Camera") as Camera;
         InfoLabel = (RichTextLabel)GetNode("../info");
         VoxMaterial = ResourceLoader.Load("res://material/Grass.tres") as SpatialMaterial;
 
         // Loading models
-        GrassModel = (ArrayMesh)ResourceLoader.Load("res://models/grass.tres");
+
         GrassMaterial = (ShaderMaterial)ResourceLoader.Load("res://Shaders/grassMaterial.tres");
 
-        // trees
-        Birch1 = (ArrayMesh)ResourceLoader.Load("res://models/trees/Birch_1.tres");
-        Birch2 = (ArrayMesh)ResourceLoader.Load("res://models/trees/Birch_2.tres");
-        Willows1 = (ArrayMesh)ResourceLoader.Load("res://models/trees/Willows_1.tres");
-        Oak1 = (ArrayMesh)ResourceLoader.Load("res://models/trees/Oak1.tres");
 
         // Generating a random seed.
         rng.Randomize();
@@ -103,7 +92,7 @@ public class Generator : Node
         InfoLabel.Text += "LoadedChunksCount: " + LoadedChunks.Count.ToString() + "\n";
         InfoLabel.Text += "ToRenderCount: " + toRenderPos.Count.ToString() + "\n";
         InfoLabel.Text += "CamPosition: " + "X: " + camX + " Z: " + camZ + "\n";
-        InfoLabel.Text += "Current Temperature: " + TemperatureManager.GetTemperature((int)(camX), 
+        InfoLabel.Text += "Current Temperature: " + TemperatureManager.GetTemperature((int)(camX),
                                                                             (int)(camZ)) + "\n";
         InfoLabel.Text += "Current Humidity: " + TemperatureManager.GetHumidity((int)(camX),
                                                                     (int)(camZ)) + "% \n";
@@ -124,9 +113,9 @@ public class Generator : Node
 
         // Noise.Lacunarity = 0.25f;
         Noise.Seed = CurrentSeed;
-        Noise.Octaves = 4;
-        Noise.Period = 400;
-        Noise.Persistence = 0.7f;
+        Noise.Octaves = 3;
+        Noise.Period = 720;
+        Noise.Persistence = 0.75f;
 
         Noise2.Seed = CurrentSeed;
         Noise2.Octaves = 3;
@@ -135,9 +124,7 @@ public class Generator : Node
 
         TemperatureManager.TemperatureMap.Seed = CurrentSeed;
         TemperatureManager.TemperatureMap.Octaves = 1;
-        TemperatureManager.TemperatureMap.Period = 256;
-        TemperatureManager.TemperatureMap.Persistence = 1f;
-
+        TemperatureManager.TemperatureMap.Period = 128;
         TemperatureManager.HumidityMap.Seed = CurrentSeed;
     }
 
@@ -151,7 +138,7 @@ public class Generator : Node
             toRenderPos.TryDequeue(out current);
             if (!PreloadedChunks.ContainsKey(current) && !LoadedChunks.ContainsKey(current))
             {
-               
+
                 Chunk chunk = new Chunk((int)current.x, (int)current.y);
                 GetChunkData(chunk);
                 PreloadedChunks.TryAdd(chunk.Offset, chunk);
@@ -228,7 +215,7 @@ public class Generator : Node
 
             // Chunk is now loaded. Adding to the scene.
             LoadedChunks.TryAdd(pChunk.Offset, pChunk);
-            AddChild(chunk);
+            this.CallDeferred("add_child", chunk);
 
             // Fade in animation.
             //var t2 = new Tween();
@@ -244,22 +231,22 @@ public class Generator : Node
         }
 
     }
-    
-    
+
+
     // Create each faces of a single voxel at pPositon in cPosition chunk.
     private void CreateVoxel(SurfaceTool pSurfaceTool, int x, int y, int z, Chunk pChunk)
     {
         // If no voxel is at position, skip
-        if (!pChunk.Voxels[x, y ,z].Active)
-            return; 
-        
+        if (!pChunk.Voxels[x, y, z].Active)
+            return;
+
         // If block is next to each faces
-        bool left   = x != 0 ? !pChunk.Voxels[x - 1, y, z].Active : true;
-        bool right  = x != 15 ? !pChunk.Voxels[x + 1, y, z].Active : true;
-        bool front  = z != 15 ? !pChunk.Voxels[x, y, z + 1].Active : true;
-        bool back   = z != 0 ? !pChunk.Voxels[x, y, z - 1].Active : true;
-        bool top    = y != 254 ? !pChunk.Voxels[x, y + 1, z].Active : true;
-        bool bottom = y > 0   ? !pChunk.Voxels[x, y - 1, z].Active : true;
+        bool left = x != 0 ? !pChunk.Voxels[x - 1, y, z].Active : true;
+        bool right = x != 15 ? !pChunk.Voxels[x + 1, y, z].Active : true;
+        bool front = z != 15 ? !pChunk.Voxels[x, y, z + 1].Active : true;
+        bool back = z != 0 ? !pChunk.Voxels[x, y, z - 1].Active : true;
+        bool top = y != 254 ? !pChunk.Voxels[x, y + 1, z].Active : true;
+        bool bottom = y > 0 ? !pChunk.Voxels[x, y - 1, z].Active : true;
 
         // If voxel is completly surrounded
         if (left && right && front && back && top && bottom)
@@ -300,7 +287,7 @@ public class Generator : Node
             pSurfaceTool.AddVertex(Vertices[2] + vertextOffset);
             pSurfaceTool.AddVertex(Vertices[6] + vertextOffset);
             pSurfaceTool.AddVertex(Vertices[5] + vertextOffset);
-            
+
         }
         if (left && !left2) // Left
         {
@@ -347,20 +334,22 @@ public class Generator : Node
     public Color GetVoxelColor(Chunk chunk, Vector3 position, BlockType type)
     {
         Color resultColor;
-        var temp = chunk.AverageTemperature;
+        var temp = ColorNoise.GetNoise3d((chunk.Offset.x * ChunkSize.x) + position.x,
+                                        position.y,
+                                        (chunk.Offset.y * ChunkSize.z) + position.z);
         switch (type)
         {
             case BlockType.grass: // Grass
-                resultColor = new Color("7eff42");
+                resultColor = new Color("2bc117");
                 break;
             case BlockType.rock: // Rock
-                resultColor = new Color("3d475b");
+                resultColor = new Color("555b5b");
                 break;
             case BlockType.sand: // Sand
-                resultColor = new Color("ffe23a");
+                resultColor = new Color("fffc4f");
                 break;
             case BlockType.wood: // Wood
-                resultColor = new Color("3e2731");
+                resultColor = new Color("514230");
                 break;
             case BlockType.leaves:
                 resultColor = new Color("76db60");
@@ -377,7 +366,7 @@ public class Generator : Node
         else
             resultColor = resultColor.LinearInterpolate(new Color(1, 1, 1), Mathf.Abs(temp));
 
-        
+
         return resultColor;
     }
 
@@ -386,17 +375,24 @@ public class Generator : Node
         // Chunk global position.
         var Offset = chunk.Offset;
 
-        for (int z = 0; z < ChunkSize.z ; z += 1)
-            for (int x = 0; x < ChunkSize.x ; x += 1)
+        // Settings !
+        BiomeManager.SetBiomeSettings(chunk.Biome);
+
+        bool placedTree = false;
+
+
+        for (int z = 0; z < ChunkSize.z; z += 1)
+            for (int x = 0; x < ChunkSize.x; x += 1)
             {
                 // Global position of the cube.
                 int gX = ((int)Offset.x * (int)Chunk.ChunkSize.x) + x;
                 int gZ = ((int)Offset.y * (int)Chunk.ChunkSize.z) + z;
-                float height = Mathf.Clamp(Mathf.Stepify(((Noise.GetNoise2d(gX, gZ) + 0.5f) * (ChunkSize.y/1.5f)), 1), 0, 254);
+                float noiseResult = (Noise.GetNoise2d(gX, gZ) + 1f) * ChunkSize.y;
+                float height = Mathf.Clamp(Mathf.Stepify(noiseResult * BiomeSettings.TerrainAmplitude, 1), 0, 254);
 
-                // Default type is rock
-                BlockType type = BlockType.rock;
-                
+                // Default type
+                BlockType type = BiomeSettings.DefaultBlocktype;
+
                 // Filling under the chunk too.
                 for (int i = 0; i <= height; i++)
                 {
@@ -404,89 +400,108 @@ public class Generator : Node
                     chunk.Voxels[x, i, z].Type = type;
                 }
 
-                // Generate mountains using 3D noise.
-                // GenerateMountains(chunk, x, z, (int)Mathf.Clamp(height, 0f, 254f));
+                if (BiomeSettings.Mountains)
+                    GenerateMountains(chunk, x, z, (int)Mathf.Clamp(height, 0f, 254f));
 
                 // Add 6 layers of grass on top of the generated rock.
                 var pos = chunk.HighestAt(x, z);
-                for (int i = 0; i < 6; i++)
+                for (int i = 0; i < BiomeSettings.TopLayerThickness; i++)
                 {
                     // Adding some dirt under top layer.
-                    var newType = BlockType.wood;
+                    var newType = BiomeSettings.UnderLayerType;
 
                     // if highest block, its grass!
                     if (i == 0)
-                        newType = BlockType.grass;
+                        newType = BiomeSettings.TopLayerType;
 
-                    if (chunk.Biome is Biomes.Tundra)
-                        newType = BlockType.snow;
                     // Placing block. Making sure its under 255 height.
                     chunk.Voxels[x, Mathf.Clamp(pos - i, 0, 254), z].Type = newType;
                 }
+
+                // Placing decoration
+                int decorationChance = rng.RandiRange(1, 100);
+                if (decorationChance < BiomeSettings.DecorationRate)
+                {
+                    // Placing point
+                    int dy = chunk.HighestAt(x, z) + 1;
+
+                    // Creating node and mesh.
+                    var meshInstance = new MeshInstance();
+                    meshInstance.Mesh = (ArrayMesh)ResourceLoader.Load(BiomeSettings.DecorationModel);
+
+                    // Adding next frame. Let godot handle lock.
+                    CallDeferred("add_child", meshInstance);
+
+                    // Moving next frame because not in tree yet
+                    meshInstance.SetDeferred("translation",new Vector3(x + (Offset.x * ChunkSize.x), dy,
+                                                                            z + (Offset.y * ChunkSize.z)));
+
+                    // Applying wind shader.
+                    meshInstance.SetDeferred("material_override", GrassMaterial);
+
+                    // Scaling down because its a decoration
+                    meshInstance.Scale = meshInstance.Scale /= 8;
+                    continue;
+                }
+
+                if (placedTree)
+                    continue;
+
             }
-
-        // Generating grass
-        rng.Randomize();
-
-        // Random amount of grass per chunk(0 to 4)
-        int grassAmount = rng.RandiRange(0, 4);
-        int gx, gy, gz; // Grass position
-        for (int g = 0; g < grassAmount; g++)
+    }
+    
+    // TODO: Make BiomeSettings non static for multiple generation pass...
+    // TODO: Make Biome interpolation. Best biome match interp.
+    // TODO: Place trees into the chunk array.
+    public void GenerateVegetation(Chunk chunk)
+    {
+        bool placedTree = false;
+        for (int x = 0; x < ChunkSize.x; x++)
         {
-            // Placing position
-            gx = rng.RandiRange(0, 15);
-            gz = rng.RandiRange(0, 15);
-            gy = chunk.HighestAt(gx, gz) + 1; // highest possible.
-
-            // Creating instance
-            var meshInstance = new MeshInstance();
-            meshInstance.Mesh = GrassModel;
-
-            // Adding to scene
-            AddChild(meshInstance);
-            meshInstance.Scale /= 8;
-            meshInstance.GlobalTranslate(new Vector3(gx + (Offset.x * ChunkSize.x), gy,
-                                                   gz + (Offset.y * ChunkSize.z) ));
-            meshInstance.SetMaterialOverride(GrassMaterial);
-          
-        }
-
-        // Trees
-        var chunkTemp = TempNoise.GetNoise2dv(chunk.Offset);
-        if (chunkTemp < TreeMinTemp || chunkTemp > TreeMaxTemp)
-            return;
-
-        int treeAmount = rng.RandiRange(0, 1);
-        int tx, ty, tz; // Grass position
-        for (int t = 0; t < treeAmount; t++)
-        {
-            // Placing position
-            tx = rng.RandiRange(0, 15);
-            tz = rng.RandiRange(0, 15);
-            ty = chunk.HighestAt(tx, tz) + 1; // highest possible.
-
-            // Creating instance
-            var meshInstance = new MeshInstance();
-
-            switch (chunk.Biome)
+            for (int z = 0; z < ChunkSize.z; z++)
             {
-                
-                case Biomes.Forest:
-                    meshInstance.Mesh = Oak1;
-                    break;
-                case Biomes.Woodlands:
-                    meshInstance.Mesh = Birch1;
-                    break;
 
+                // Placing trees
+                float treeChance = rng.RandfRange(1f, 100f);
+                if (treeChance < BiomeSettings.TreeRate)
+                {
+                    var file = (ArrayMesh)ResourceLoader.Load(BiomeSettings.TreeModel);
+                    foreach (var item in file.GetMetaList())
+                    {
+                        if (item == "voxel_size")
+                            continue;
+
+                        int ty = chunk.HighestAt(x, z) + 1;
+
+                        var array = item.Split(",");
+                        var result = new Vector3(Mathf.Abs(int.Parse(array[0].Right(1))),
+                                                Mathf.Abs(int.Parse(array[1])),
+                                                Mathf.Abs(int.Parse(array[2].Left(array[2].Length - 1))));
+
+                        var voxelPosition = result + new Vector3(x, ty, z);
+
+                        if ((voxelPosition.x < 0 || voxelPosition.x >= 16) ||
+                            (voxelPosition.y < 0 || voxelPosition.y >= 255) ||
+                            (voxelPosition.z < 0 || voxelPosition.z >= 16))
+
+                            continue;
+                        GD.Print(voxelPosition);
+                        chunk.Voxels[(int)voxelPosition.x, (int)voxelPosition.y, (int)voxelPosition.z].Active = true;
+                    }
+                    //// Placing point.
+
+                    //// Creating and setting the mesh.
+                    //var meshInstance = new MeshInstance();
+                    //meshInstance.Mesh = 
+
+                    //// Adding it next frame.(safe with mutex lock)
+                    //CallDeferred("add_child", meshInstance);
+                    //// Moving it next frame(not in the tree yet :))
+                    //meshInstance.SetDeferred("translation", new Vector3(x + (Offset.x * ChunkSize.x) -10, ty,
+                    //                                                        z + (Offset.y * ChunkSize.z + 10)));
+                    placedTree = true;
+                }
             }
-
-
-            // Adding to scene
-            AddChild(meshInstance);
-            meshInstance.GlobalTranslate(new Vector3(tx + (Offset.x * ChunkSize.x), ty - 1,
-                                                   tz + (Offset.y * ChunkSize.z)));
-            //meshInstance.SetMaterialOverride(GrassMaterial);
-
         }
     }
 
@@ -514,8 +529,6 @@ public class Generator : Node
             }
             previousDensity = density;
         }
-
-       
     }
 
 

@@ -1,0 +1,13 @@
+[remap]
+
+importer="MagicaVoxel-Importer"
+type="ArrayMesh"
+path="res://.import/pine_snow1.vox-2e54661501ed4fb8879d78e2d8b5636d.tres"
+
+[deps]
+
+source_file="res://models/trees/pine_snow1.vox"
+dest_files=[ "res://.import/pine_snow1.vox-2e54661501ed4fb8879d78e2d8b5636d.tres" ]
+
+[params]
+

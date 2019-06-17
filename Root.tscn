@@ -1,10 +1,8 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://Scripts/Generator.cs" type="Script" id=1]
 [ext_resource path="res://assets/maujoe.camera_control/scripts/camera_control.gd" type="Script" id=2]
 [ext_resource path="res://FORCED SQUARE.ttf" type="DynamicFontData" id=3]
-[ext_resource path="res://models/grass.tres" type="ArrayMesh" id=4]
-[ext_resource path="res://Shaders/grassMaterial.tres" type="Material" id=5]
 
 [sub_resource type="DynamicFont" id=1]
 size = 22
@@ -19,7 +17,6 @@ light_energy = 0.75
 light_indirect_energy = 0.0
 light_specular = 0.37
 light_bake_mode = 2
-shadow_enabled = true
 directional_shadow_depth_range = 1
 
 [node name="Generator" type="Node" parent="."]
@@ -30,6 +27,7 @@ transform = Transform( 1, 0, 0, 0, 0.106413, 0.994322, 0, -0.994322, 0.106413, 0
 far = 8192.0
 script = ExtResource( 2 )
 smoothness = 0.745
+collisions = false
 acceleration = 0.522
 max_speed = Vector3( 40, 40, 40 )
 
@@ -43,9 +41,4 @@ custom_fonts/normal_font = SubResource( 1 )
 text = "ToRenderCount:
 PreloadedCount:
 RenderedCount:"
-
-[node name="MeshInstance" type="MeshInstance" parent="."]
-transform = Transform( 0.125, 0, 0, 0, 0.125, 0, 0, 0, 0.125, 0, 0, 0 )
-mesh = ExtResource( 4 )
-material/0 = ExtResource( 5 )
 

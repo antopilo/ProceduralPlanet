@@ -1,0 +1,13 @@
+[remap]
+
+importer="MagicaVoxel-Importer"
+type="ArrayMesh"
+path="res://.import/Trees_Veloren_Trees_Purple_Kyojin_KyojinTree.vox-c8b6d5a7e1132b85fbfc9f37c3bc8eb5.tres"
+
+[deps]
+
+source_file="res://models/trees/Trees_Veloren_Trees_Purple_Kyojin_KyojinTree.vox"
+dest_files=[ "res://.import/Trees_Veloren_Trees_Purple_Kyojin_KyojinTree.vox-c8b6d5a7e1132b85fbfc9f37c3bc8eb5.tres" ]
+
+[params]
+

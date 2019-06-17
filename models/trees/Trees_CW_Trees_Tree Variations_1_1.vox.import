@@ -1,0 +1,13 @@
+[remap]
+
+importer="MagicaVoxel-Importer"
+type="ArrayMesh"
+path="res://.import/Trees_CW_Trees_Tree Variations_1_1.vox-2a549e42fbafda398428b133123ba643.tres"
+
+[deps]
+
+source_file="res://models/trees/Trees_CW_Trees_Tree Variations_1_1.vox"
+dest_files=[ "res://.import/Trees_CW_Trees_Tree Variations_1_1.vox-2a549e42fbafda398428b133123ba643.tres" ]
+
+[params]
+
