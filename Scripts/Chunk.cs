@@ -9,6 +9,7 @@ public enum BlockType
     sand = 3,
     wood = 4,
     leaves = 5,
+    snow
 }
 
 // A single voxel.
@@ -18,14 +19,18 @@ public struct Voxel
     public bool Active;
 }
 
+
 public class Chunk : Spatial
 {
     public static Vector3 ChunkSize = new Vector3(16, 255, 16);
-    public Vector2 Offset;
-    public Voxel[,,] Voxels = new Voxel[16,255,16];
 
-    public bool[] renderFlags = new bool[15];
-    
+    public Voxel[,,] Voxels = new Voxel[16,255,16];
+    public Vector2 Offset;
+    public float AverageTemperature = 0;
+    public float AverageHumidity = 0;
+    public Biomes Biome;
+
+
     // Returns the highest voxels at X Z.
     public int HighestAt(int x, int z)
     {
@@ -46,12 +51,20 @@ public class Chunk : Spatial
             for (int y = 0; y < ChunkSize.y; y++)
                 for (int z = 0; z < ChunkSize.z; z++)
                 {
-                    Voxels[x, y, z] = new Voxel() { Active = false, Type = BlockType.grass};
+                    Voxels[x, y, z] = new Voxel() {
+                            Active = false, 
+                            Type = BlockType.grass
+                         };
                 }
+        
+        var globalPosition = new Vector2(offsetX * ChunkSize.x, offsetZ * ChunkSize.z);
+
+        // Get Temperature and humidity in chunk.
+        AverageTemperature = TemperatureManager.GetTemperature((int)globalPosition.x, (int)globalPosition.y);
+        AverageHumidity = TemperatureManager.GetHumidity((int)globalPosition.x, (int)globalPosition.y);
+
+        // GetBiome from temperature and humidity.
+        Biome = BiomeManager.GetBiome(AverageTemperature, AverageHumidity);
     }
-
-    
-
-  
 }
 

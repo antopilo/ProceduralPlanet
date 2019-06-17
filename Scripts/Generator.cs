@@ -9,11 +9,11 @@ public class Generator : Node
     private static int CurrentSeed = 0;
     private static OpenSimplexNoise Noise = new OpenSimplexNoise();
     private static OpenSimplexNoise Noise2 = new OpenSimplexNoise();
-    private static OpenSimplexNoise TempNoise = new OpenSimplexNoise();
 
+    public static OpenSimplexNoise TempNoise = new OpenSimplexNoise();
     private static RandomNumberGenerator rng = new RandomNumberGenerator();
 
-    public static int WaterLevel = 62;
+    private static int WaterLevel = 62;
     private static int camX = 0, camZ = 0;
     private Camera Camera;
     private SurfaceTool SurfaceTool;
@@ -103,8 +103,12 @@ public class Generator : Node
         InfoLabel.Text += "LoadedChunksCount: " + LoadedChunks.Count.ToString() + "\n";
         InfoLabel.Text += "ToRenderCount: " + toRenderPos.Count.ToString() + "\n";
         InfoLabel.Text += "CamPosition: " + "X: " + camX + " Z: " + camZ + "\n";
-        InfoLabel.Text += "Current Temperature: " + TempNoise.GetNoise2d(camX * ChunkSize.x, camZ * ChunkSize.z);
-
+        InfoLabel.Text += "Current Temperature: " + TemperatureManager.GetTemperature((int)(camX), 
+                                                                            (int)(camZ)) + "\n";
+        InfoLabel.Text += "Current Humidity: " + TemperatureManager.GetHumidity((int)(camX),
+                                                                    (int)(camZ)) + "% \n";
+        if (LoadedChunks.ContainsKey(new Vector2(camX, camZ)))
+            InfoLabel.Text += "Current biome: " + LoadedChunks[new Vector2(camX, camZ)].Biome.ToString();
     }
 
 
@@ -129,10 +133,12 @@ public class Generator : Node
         Noise2.Period = 512;
         Noise2.Persistence = 0.8f;
 
-        TempNoise.Seed = CurrentSeed;
-        TempNoise.Octaves = 2;
-        TempNoise.Period = 128;
-        TempNoise.Persistence = 0.5f;
+        TemperatureManager.TemperatureMap.Seed = CurrentSeed;
+        TemperatureManager.TemperatureMap.Octaves = 1;
+        TemperatureManager.TemperatureMap.Period = 256;
+        TemperatureManager.TemperatureMap.Persistence = 1f;
+
+        TemperatureManager.HumidityMap.Seed = CurrentSeed;
     }
 
 
@@ -161,7 +167,10 @@ public class Generator : Node
     {
         while (true)
         {
-            foreach (var c in PreloadedChunks.OrderBy(c => DistanceToChunk(c.Key)))
+            if (PreloadedChunks.Count <= 1)
+                continue;
+
+            foreach (var c in PreloadedChunks)
             {
                 if (!ChunkSurrounded(c.Key))
                     continue;
@@ -338,7 +347,7 @@ public class Generator : Node
     public Color GetVoxelColor(Chunk chunk, Vector3 position, BlockType type)
     {
         Color resultColor;
-        var temp = TempNoise.GetNoise2dv(chunk.Offset * new Vector2(ChunkSize.x, ChunkSize.z) + new Vector2(position.x, position.z));
+        var temp = chunk.AverageTemperature;
         switch (type)
         {
             case BlockType.grass: // Grass
@@ -356,12 +365,15 @@ public class Generator : Node
             case BlockType.leaves:
                 resultColor = new Color("76db60");
                 break;
+            case BlockType.snow:
+                resultColor = new Color("c0d5f9");
+                break;
             default:
                 resultColor = new Color("76552b");
                 break;
         }
         if (temp > 0)
-            resultColor = resultColor.LinearInterpolate(new Color(1, 1, 0),temp);
+            resultColor = resultColor.LinearInterpolate(new Color(1, 1, 0), temp);
         else
             resultColor = resultColor.LinearInterpolate(new Color(1, 1, 1), Mathf.Abs(temp));
 
@@ -393,7 +405,7 @@ public class Generator : Node
                 }
 
                 // Generate mountains using 3D noise.
-               // GenerateMountains(chunk, x, z, (int)Mathf.Clamp(height, 0f, 254f));
+                // GenerateMountains(chunk, x, z, (int)Mathf.Clamp(height, 0f, 254f));
 
                 // Add 6 layers of grass on top of the generated rock.
                 var pos = chunk.HighestAt(x, z);
@@ -406,6 +418,8 @@ public class Generator : Node
                     if (i == 0)
                         newType = BlockType.grass;
 
+                    if (chunk.Biome is Biomes.Tundra)
+                        newType = BlockType.snow;
                     // Placing block. Making sure its under 255 height.
                     chunk.Voxels[x, Mathf.Clamp(pos - i, 0, 254), z].Type = newType;
                 }
@@ -438,47 +452,42 @@ public class Generator : Node
         }
 
         // Trees
-        //var chunkTemp = TempNoise.GetNoise2dv(chunk.Offset);
-        //if (chunkTemp < TreeMinTemp || chunkTemp > TreeMaxTemp)
-        //    return;
+        var chunkTemp = TempNoise.GetNoise2dv(chunk.Offset);
+        if (chunkTemp < TreeMinTemp || chunkTemp > TreeMaxTemp)
+            return;
 
-        //int treeType = rng.RandiRange(0, 4);
-        //int treeAmount = rng.RandiRange(0, 1);
-        //int tx, ty, tz; // Grass position
-        //for (int t = 0; t < treeAmount; t++)
-        //{
-        //    // Placing position
-        //    tx = rng.RandiRange(0, 15);
-        //    tz = rng.RandiRange(0, 15);
-        //    ty = chunk.HighestAt(tx, tz) + 1; // highest possible.
+        int treeAmount = rng.RandiRange(0, 1);
+        int tx, ty, tz; // Grass position
+        for (int t = 0; t < treeAmount; t++)
+        {
+            // Placing position
+            tx = rng.RandiRange(0, 15);
+            tz = rng.RandiRange(0, 15);
+            ty = chunk.HighestAt(tx, tz) + 1; // highest possible.
 
-        //    // Creating instance
-        //    var meshInstance = new MeshInstance();
+            // Creating instance
+            var meshInstance = new MeshInstance();
 
-        //    switch (treeType)
-        //    {
-        //        case 0:
-        //            meshInstance.Mesh = Birch1;
-        //            break;
-        //        case 1:
-        //            meshInstance.Mesh = Birch2;
-        //            break;
-        //        case 2:
-        //            meshInstance.Mesh = Willows1;
-        //            break;
-        //        case 3:
-        //            meshInstance.Mesh = Oak1;
-        //            break;
-        //    }
-            
+            switch (chunk.Biome)
+            {
+                
+                case Biomes.Forest:
+                    meshInstance.Mesh = Oak1;
+                    break;
+                case Biomes.Woodlands:
+                    meshInstance.Mesh = Birch1;
+                    break;
 
-        //    // Adding to scene
-        //    AddChild(meshInstance);
-        //    meshInstance.GlobalTranslate(new Vector3(tx + (Offset.x * ChunkSize.x) - 10, ty - 2,
-        //                                           tz + (Offset.y * ChunkSize.z) + 10));
-        //    //meshInstance.SetMaterialOverride(GrassMaterial);
+            }
 
-        //}
+
+            // Adding to scene
+            AddChild(meshInstance);
+            meshInstance.GlobalTranslate(new Vector3(tx + (Offset.x * ChunkSize.x), ty - 1,
+                                                   tz + (Offset.y * ChunkSize.z)));
+            //meshInstance.SetMaterialOverride(GrassMaterial);
+
+        }
     }
 
 
@@ -532,7 +541,6 @@ public class Generator : Node
         {
             return false;
         }
-
     }
 }
 
