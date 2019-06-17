@@ -8,6 +8,8 @@ namespace ProceduralPlanet.Scripts.Biomes
 {
     class ColdDesert 
     {
+        public static float TargetTemperature { get; } = 10f;
+        public static float TargetHumidity { get; } = 20f;
         // Terrain
         public static BlockType DefaultBlocktype = BlockType.grass;
         public static BlockType UnderLayerType { get; set; } = BlockType.dirt;

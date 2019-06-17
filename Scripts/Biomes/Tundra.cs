@@ -7,7 +7,11 @@ using System.Threading.Tasks;
 namespace ProceduralPlanet.Scripts.Biomes
 {
     class Tundra
-    {    // Terrain
+    {
+        public static float TargetTemperature { get; } = -10f;
+        public static float TargetHumidity { get; } = 0f;
+
+        // Terrain
         public static BlockType DefaultBlocktype = BlockType.grass;
         public static BlockType UnderLayerType { get; set; } = BlockType.dirt;
         public static float TerrainAmplitude { get; set; } = 0.5f;

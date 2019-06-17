@@ -10,6 +10,7 @@ public class Chunk : Spatial
     public Vector2 Offset;
     public float AverageTemperature = 0;
     public float AverageHumidity = 0;
+
     public Biomes Biome;
 
     // Returns the highest voxels at X Z.

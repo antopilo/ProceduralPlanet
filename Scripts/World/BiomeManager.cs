@@ -26,9 +26,14 @@
  */
 
 using ProceduralPlanet.Scripts.Biomes;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
-public static class BiomeManager
+public class BiomeManager
 {
+    public static float BiomeAcceptanceThreshold = 0.5f;
+
     public static Biomes GetBiome(float temperature, float humidity)
     {
         bool isTundra = temperature >= -10 && temperature < 0;
@@ -61,120 +66,204 @@ public static class BiomeManager
             return Biomes.Forest; // Default 
     }
 
-    public static void SetBiomeSettings(Biomes biome)
+
+
+    public static BiomeSettings GetBiomeSettings(Biomes biome)
     {
+        var newBiomeSettings = new BiomeSettings();
         switch (biome)
         {
             case Biomes.Tundra:
-                BiomeSettings.DefaultBlocktype = Tundra.DefaultBlocktype;
-                BiomeSettings.TopLayerType = Tundra.TopLayerType;
-                BiomeSettings.UnderLayerType = Tundra.UnderLayerType;
-                BiomeSettings.Mountains = Tundra.Mountains;
-                BiomeSettings.TerrainAmplitude = Tundra.TerrainAmplitude;
-                BiomeSettings.TopLayerThickness = Tundra.TopLayerThickness;
-                BiomeSettings.TreeModel = Tundra.TreeModel;
-                BiomeSettings.TreeRate = Tundra.TreeRate;
-                BiomeSettings.DecorationModel = Tundra.DecorationModel;
-                BiomeSettings.DecorationRate = Tundra.DecorationRate;
+
+                newBiomeSettings.DefaultBlocktype = Tundra.DefaultBlocktype;
+                newBiomeSettings.TopLayerType = Tundra.TopLayerType;
+                newBiomeSettings.UnderLayerType = Tundra.UnderLayerType;
+                newBiomeSettings.Mountains = Tundra.Mountains;
+                newBiomeSettings.TerrainAmplitude = Tundra.TerrainAmplitude;
+                newBiomeSettings.TopLayerThickness = Tundra.TopLayerThickness;
+                newBiomeSettings.TreeModel = Tundra.TreeModel;
+                newBiomeSettings.TreeRate = Tundra.TreeRate;
+                newBiomeSettings.DecorationModel = Tundra.DecorationModel;
+                newBiomeSettings.DecorationRate = Tundra.DecorationRate;
                 break;
             case Biomes.BorealForest:
-                BiomeSettings.DefaultBlocktype = BorealForest.DefaultBlocktype;
-                BiomeSettings.TopLayerType = BorealForest.TopLayerType;
-                BiomeSettings.UnderLayerType = BorealForest.UnderLayerType;
-                BiomeSettings.Mountains = BorealForest.Mountains;
-                BiomeSettings.TerrainAmplitude = BorealForest.TerrainAmplitude;
-                BiomeSettings.TopLayerThickness = BorealForest.TopLayerThickness;
-                BiomeSettings.TreeModel = BorealForest.TreeModel;
-                BiomeSettings.TreeRate = BorealForest.TreeRate;
-                BiomeSettings.DecorationModel = BorealForest.DecorationModel;
-                BiomeSettings.DecorationRate = BorealForest.DecorationRate;
+                newBiomeSettings.DefaultBlocktype = BorealForest.DefaultBlocktype;
+                newBiomeSettings.TopLayerType = BorealForest.TopLayerType;
+                newBiomeSettings.UnderLayerType = BorealForest.UnderLayerType;
+                newBiomeSettings.Mountains = BorealForest.Mountains;
+                newBiomeSettings.TerrainAmplitude = BorealForest.TerrainAmplitude;
+                newBiomeSettings.TopLayerThickness = BorealForest.TopLayerThickness;
+                newBiomeSettings.TreeModel = BorealForest.TreeModel;
+                newBiomeSettings.TreeRate = BorealForest.TreeRate;
+                newBiomeSettings.DecorationModel = BorealForest.DecorationModel;
+                newBiomeSettings.DecorationRate = BorealForest.DecorationRate;
                 break;
             case Biomes.Woodlands:
-                BiomeSettings.DefaultBlocktype = Woodlands.DefaultBlocktype;
-                BiomeSettings.TopLayerType = Woodlands.TopLayerType;
-                BiomeSettings.UnderLayerType = Woodlands.UnderLayerType;
-                BiomeSettings.Mountains = Woodlands.Mountains;
-                BiomeSettings.TerrainAmplitude = Woodlands.TerrainAmplitude;
-                BiomeSettings.TopLayerThickness = Woodlands.TopLayerThickness;
-                BiomeSettings.TreeModel = Woodlands.TreeModel;
-                BiomeSettings.TreeRate = Woodlands.TreeRate;
-                BiomeSettings.DecorationModel = Woodlands.DecorationModel;
-                BiomeSettings.DecorationRate = Woodlands.DecorationRate;
+                newBiomeSettings.DefaultBlocktype = Woodlands.DefaultBlocktype;
+                newBiomeSettings.TopLayerType = Woodlands.TopLayerType;
+                newBiomeSettings.UnderLayerType = Woodlands.UnderLayerType;
+                newBiomeSettings.Mountains = Woodlands.Mountains;
+                newBiomeSettings.TerrainAmplitude = Woodlands.TerrainAmplitude;
+                newBiomeSettings.TopLayerThickness = Woodlands.TopLayerThickness;
+                newBiomeSettings.TreeModel = Woodlands.TreeModel;
+                newBiomeSettings.TreeRate = Woodlands.TreeRate;
+                newBiomeSettings.DecorationModel = Woodlands.DecorationModel;
+                newBiomeSettings.DecorationRate = Woodlands.DecorationRate;
                 break;
             case Biomes.ColdDesert:
-                BiomeSettings.DefaultBlocktype = ColdDesert.DefaultBlocktype;
-                BiomeSettings.TopLayerType = ColdDesert.TopLayerType;
-                BiomeSettings.UnderLayerType = ColdDesert.UnderLayerType;
-                BiomeSettings.Mountains = ColdDesert.Mountains;
-                BiomeSettings.TerrainAmplitude = ColdDesert.TerrainAmplitude;
-                BiomeSettings.TopLayerThickness = ColdDesert.TopLayerThickness;
-                BiomeSettings.TreeModel = ColdDesert.TreeModel;
-                BiomeSettings.TreeRate = ColdDesert.TreeRate;
-                BiomeSettings.DecorationModel = ColdDesert.DecorationModel;
-                BiomeSettings.DecorationRate = ColdDesert.DecorationRate;
+                newBiomeSettings.DefaultBlocktype = ColdDesert.DefaultBlocktype;
+                newBiomeSettings.TopLayerType = ColdDesert.TopLayerType;
+                newBiomeSettings.UnderLayerType = ColdDesert.UnderLayerType;
+                newBiomeSettings.Mountains = ColdDesert.Mountains;
+                newBiomeSettings.TerrainAmplitude = ColdDesert.TerrainAmplitude;
+                newBiomeSettings.TopLayerThickness = ColdDesert.TopLayerThickness;
+                newBiomeSettings.TreeModel = ColdDesert.TreeModel;
+                newBiomeSettings.TreeRate = ColdDesert.TreeRate;
+                newBiomeSettings.DecorationModel = ColdDesert.DecorationModel;
+                newBiomeSettings.DecorationRate = ColdDesert.DecorationRate;
                 break;
             case Biomes.Desert:
-                BiomeSettings.DefaultBlocktype = Desert.DefaultBlocktype;
-                BiomeSettings.TopLayerType = Desert.TopLayerType;
-                BiomeSettings.UnderLayerType = Desert.UnderLayerType;
-                BiomeSettings.Mountains = Desert.Mountains;
-                BiomeSettings.TerrainAmplitude = Desert.TerrainAmplitude;
-                BiomeSettings.TopLayerThickness = Desert.TopLayerThickness;
-                BiomeSettings.TreeModel = Desert.TreeModel;
-                BiomeSettings.TreeRate = Desert.TreeRate;
-                BiomeSettings.DecorationModel = Desert.DecorationModel;
-                BiomeSettings.DecorationRate = Desert.DecorationRate;
+                newBiomeSettings.DefaultBlocktype = Desert.DefaultBlocktype;
+                newBiomeSettings.TopLayerType = Desert.TopLayerType;
+                newBiomeSettings.UnderLayerType = Desert.UnderLayerType;
+                newBiomeSettings.Mountains = Desert.Mountains;
+                newBiomeSettings.TerrainAmplitude = Desert.TerrainAmplitude;
+                newBiomeSettings.TopLayerThickness = Desert.TopLayerThickness;
+                newBiomeSettings.TreeModel = Desert.TreeModel;
+                newBiomeSettings.TreeRate = Desert.TreeRate;
+                newBiomeSettings.DecorationModel = Desert.DecorationModel;
+                newBiomeSettings.DecorationRate = Desert.DecorationRate;
                 break;
             case Biomes.Savanna:
-                BiomeSettings.DefaultBlocktype = Savanna.DefaultBlocktype;
-                BiomeSettings.TopLayerType = Savanna.TopLayerType;
-                BiomeSettings.UnderLayerType = Savanna.UnderLayerType;
-                BiomeSettings.Mountains = Savanna.Mountains;
-                BiomeSettings.TerrainAmplitude = Savanna.TerrainAmplitude;
-                BiomeSettings.TopLayerThickness = Savanna.TopLayerThickness;
-                BiomeSettings.TreeModel = Savanna.TreeModel;
-                BiomeSettings.TreeRate = Savanna.TreeRate;
-                BiomeSettings.DecorationModel = Savanna.DecorationModel;
-                BiomeSettings.DecorationRate = Savanna.DecorationRate;
+                newBiomeSettings.DefaultBlocktype = Savanna.DefaultBlocktype;
+                newBiomeSettings.TopLayerType = Savanna.TopLayerType;
+                newBiomeSettings.UnderLayerType = Savanna.UnderLayerType;
+                newBiomeSettings.Mountains = Savanna.Mountains;
+                newBiomeSettings.TerrainAmplitude = Savanna.TerrainAmplitude;
+                newBiomeSettings.TopLayerThickness = Savanna.TopLayerThickness;
+                newBiomeSettings.TreeModel = Savanna.TreeModel;
+                newBiomeSettings.TreeRate = Savanna.TreeRate;
+                newBiomeSettings.DecorationModel = Savanna.DecorationModel;
+                newBiomeSettings.DecorationRate = Savanna.DecorationRate;
                 break;
             case Biomes.RainForest:
-                BiomeSettings.DefaultBlocktype = RainForest.DefaultBlocktype;
-                BiomeSettings.TopLayerType = RainForest.TopLayerType;
-                BiomeSettings.UnderLayerType = RainForest.UnderLayerType;
-                BiomeSettings.Mountains = RainForest.Mountains;
-                BiomeSettings.TerrainAmplitude = RainForest.TerrainAmplitude;
-                BiomeSettings.TopLayerThickness = RainForest.TopLayerThickness;
-                BiomeSettings.TreeModel = RainForest.TreeModel;
-                BiomeSettings.TreeRate = RainForest.TreeRate;
-                BiomeSettings.DecorationModel = RainForest.DecorationModel;
-                BiomeSettings.DecorationRate = RainForest.DecorationRate;
+                newBiomeSettings.DefaultBlocktype = RainForest.DefaultBlocktype;
+                newBiomeSettings.TopLayerType = RainForest.TopLayerType;
+                newBiomeSettings.UnderLayerType = RainForest.UnderLayerType;
+                newBiomeSettings.Mountains = RainForest.Mountains;
+                newBiomeSettings.TerrainAmplitude = RainForest.TerrainAmplitude;
+                newBiomeSettings.TopLayerThickness = RainForest.TopLayerThickness;
+                newBiomeSettings.TreeModel = RainForest.TreeModel;
+                newBiomeSettings.TreeRate = RainForest.TreeRate;
+                newBiomeSettings.DecorationModel = RainForest.DecorationModel;
+                newBiomeSettings.DecorationRate = RainForest.DecorationRate;
                 break;
             case Biomes.TropicRainForest:
-                BiomeSettings.DefaultBlocktype = TropicRainForest.DefaultBlocktype;
-                BiomeSettings.TopLayerType = TropicRainForest.TopLayerType;
-                BiomeSettings.UnderLayerType = TropicRainForest.UnderLayerType;
-                BiomeSettings.Mountains = TropicRainForest.Mountains;
-                BiomeSettings.TerrainAmplitude = TropicRainForest.TerrainAmplitude;
-                BiomeSettings.TopLayerThickness = TropicRainForest.TopLayerThickness;
-                BiomeSettings.TreeModel = TropicRainForest.TreeModel;
-                BiomeSettings.TreeRate = TropicRainForest.TreeRate;
-                BiomeSettings.DecorationModel = TropicRainForest.DecorationModel;
-                BiomeSettings.DecorationRate = TropicRainForest.DecorationRate;
+                newBiomeSettings.DefaultBlocktype = TropicRainForest.DefaultBlocktype;
+                newBiomeSettings.TopLayerType = TropicRainForest.TopLayerType;
+                newBiomeSettings.UnderLayerType = TropicRainForest.UnderLayerType;
+                newBiomeSettings.Mountains = TropicRainForest.Mountains;
+                newBiomeSettings.TerrainAmplitude = TropicRainForest.TerrainAmplitude;
+                newBiomeSettings.TopLayerThickness = TropicRainForest.TopLayerThickness;
+                newBiomeSettings.TreeModel = TropicRainForest.TreeModel;
+                newBiomeSettings.TreeRate = TropicRainForest.TreeRate;
+                newBiomeSettings.DecorationModel = TropicRainForest.DecorationModel;
+                newBiomeSettings.DecorationRate = TropicRainForest.DecorationRate;
                 break;
             case Biomes.Forest:
-                BiomeSettings.DefaultBlocktype = Forest.DefaultBlocktype;
-                BiomeSettings.TopLayerType = Forest.TopLayerType;
-                BiomeSettings.UnderLayerType = Forest.UnderLayerType;
-                BiomeSettings.Mountains = Forest.Mountains;
-                BiomeSettings.TerrainAmplitude = Forest.TerrainAmplitude;
-                BiomeSettings.TopLayerThickness = Forest.TopLayerThickness;
-                BiomeSettings.TreeModel = Forest.TreeModel;
-                BiomeSettings.TreeRate = Forest.TreeRate;
-                BiomeSettings.DecorationModel = Forest.DecorationModel;
-                BiomeSettings.DecorationRate = Forest.DecorationRate;
+                newBiomeSettings.DefaultBlocktype = Forest.DefaultBlocktype;
+                newBiomeSettings.TopLayerType = Forest.TopLayerType;
+                newBiomeSettings.UnderLayerType = Forest.UnderLayerType;
+                newBiomeSettings.Mountains = Forest.Mountains;
+                newBiomeSettings.TerrainAmplitude = Forest.TerrainAmplitude;
+                newBiomeSettings.TopLayerThickness = Forest.TopLayerThickness;
+                newBiomeSettings.TreeModel = Forest.TreeModel;
+                newBiomeSettings.TreeRate = Forest.TreeRate;
+                newBiomeSettings.DecorationModel = Forest.DecorationModel;
+                newBiomeSettings.DecorationRate = Forest.DecorationRate;
                 break;
         }
+
+        return newBiomeSettings;
+
     }
 
-    
+    public static BiomeSettings BestMatch(float temp, float humidity)
+    {
+        // Calculate match for each biome.
+        float[] results = new float[Enum.GetValues(typeof(Biomes)).Length];
+        for (int i = 0; i < results.Length; i++)
+        {
+            results[i] = GetMatch(temp, humidity, GetBiomeSettings((Biomes)i));
+        }
+
+        // Pick top 2
+        int bestMatch = 0, secondMatch = 0;
+        for (int i = 0; i < results.Length; i++)
+        {
+            if (results[i] > bestMatch)
+            {
+                bestMatch = i;
+                secondMatch = bestMatch;
+            }
+
+            if (results[i] > secondMatch && results[i] != bestMatch)
+                secondMatch = i;
+        }
+
+        var BestSetting = GetBiomeSettings((Biomes)bestMatch);
+        var SecondSetting = GetBiomeSettings((Biomes)secondMatch);
+
+        if (results[bestMatch] >= BiomeAcceptanceThreshold)
+            return GetBiomeSettings((Biomes)bestMatch);
+        else
+            return InterpolateBiome(BestSetting, results[bestMatch], SecondSetting, results[secondMatch]);
+    }
+
+    private static BiomeSettings InterpolateBiome(BiomeSettings BestSetting, float best, BiomeSettings SecondSetting, float second)
+    {
+        var newSetting = new BiomeSettings();
+
+        newSetting.TerrainAmplitude = BestSetting.TerrainAmplitude * best + SecondSetting.TerrainAmplitude * second;
+        newSetting.TopLayerThickness = (int)(BestSetting.TopLayerThickness * best + SecondSetting.TopLayerThickness * second);
+        newSetting.TreeRate = BestSetting.TreeRate * best + SecondSetting.TreeRate * second;
+
+        // TODO: Make decoration rate a float.
+        newSetting.DecorationRate = (int)(BestSetting.DecorationRate * best + SecondSetting.DecorationRate * second);
+        
+        if(best > second)
+        {
+            newSetting.DefaultBlocktype = BestSetting.DefaultBlocktype;
+            newSetting.TopLayerType = BestSetting.TopLayerType;
+            newSetting.UnderLayerType = BestSetting.UnderLayerType;
+
+            newSetting.TreeModel = BestSetting.TreeModel;
+            newSetting.DecorationModel = BestSetting.DecorationModel;
+        }
+        else
+        {
+            newSetting.DefaultBlocktype = SecondSetting.DefaultBlocktype;
+            newSetting.TopLayerType = SecondSetting.TopLayerType;
+            newSetting.UnderLayerType = SecondSetting.UnderLayerType;
+
+            newSetting.TreeModel = SecondSetting.TreeModel;
+            newSetting.DecorationModel = SecondSetting.DecorationModel;
+        }
+
+        return newSetting;
+    }
+
+    private static float GetMatch(float temp, float humidity, BiomeSettings biome)
+    {
+        float realTemp, realHum, realTargetTemp, realTargetHum;
+        float targetTemp = biome.TargetTemperature;
+        float targetHum = biome.TargetHumidity;
+
+        realTemp = (TemperatureManager.GetOriginalTemperature(temp) + 1f) / 2f;
+        realTargetTemp = (TemperatureManager.GetOriginalTemperature(targetTemp) + 1f) / 2f;
+        realHum = humidity / 100f;
+        realTargetHum = targetHum / 100f;
+ 
+        return 1 - ((realTemp - realTargetTemp) + (realHum - realTargetHum)); ;
+    }
 }

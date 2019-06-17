@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace ProceduralPlanet.Scripts.Biomes
 {
-    class Biome
+    public interface Biome
     {
+        
     }
 }

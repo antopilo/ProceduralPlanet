@@ -75,7 +75,6 @@ public class Generator : Node
     {
         int camX = int.Parse(Mathf.Stepify(Camera.Transform.origin.x / ChunkSize.x, 1).ToString());
         int camZ = int.Parse(Mathf.Stepify(Camera.Transform.origin.z / ChunkSize.z, 1).ToString());
-        var list = new List<Vector2>();
         for (int x = -RenderDistance; x <= RenderDistance; x++)
         {
             for (int y = -RenderDistance; y <= RenderDistance; y++)
@@ -86,18 +85,17 @@ public class Generator : Node
             }
         }
 
+        var temp = TemperatureManager.GetTemperature((int)(Camera.Transform.origin.x), (int)(Camera.Transform.origin.z));
+        var hum = TemperatureManager.GetHumidity((int)(Camera.Transform.origin.x), (int)(Camera.Transform.origin.z));
         InfoLabel.Clear();
         //InfoLabel.Text += "FPS: " + Engine.GetFramesPerSecond() + "\n";
         InfoLabel.Text += "PreloadedCount: " + PreloadedChunks.Count.ToString() + "\n";
         InfoLabel.Text += "LoadedChunksCount: " + LoadedChunks.Count.ToString() + "\n";
         InfoLabel.Text += "ToRenderCount: " + toRenderPos.Count.ToString() + "\n";
         InfoLabel.Text += "CamPosition: " + "X: " + camX + " Z: " + camZ + "\n";
-        InfoLabel.Text += "Current Temperature: " + TemperatureManager.GetTemperature((int)(camX),
-                                                                            (int)(camZ)) + "\n";
-        InfoLabel.Text += "Current Humidity: " + TemperatureManager.GetHumidity((int)(camX),
-                                                                    (int)(camZ)) + "% \n";
-        if (LoadedChunks.ContainsKey(new Vector2(camX, camZ)))
-            InfoLabel.Text += "Current biome: " + LoadedChunks[new Vector2(camX, camZ)].Biome.ToString();
+        InfoLabel.Text += "Current Temperature: " + temp + "\n";
+        InfoLabel.Text += "Current Humidity: " + hum + "% \n";
+        InfoLabel.Text += "Current biome: " + BiomeManager.GetBiome(temp, hum).ToString();
     }
 
 
@@ -124,8 +122,11 @@ public class Generator : Node
 
         TemperatureManager.TemperatureMap.Seed = CurrentSeed;
         TemperatureManager.TemperatureMap.Octaves = 1;
-        TemperatureManager.TemperatureMap.Period = 128;
+        TemperatureManager.TemperatureMap.Period = 512;
+
         TemperatureManager.HumidityMap.Seed = CurrentSeed;
+        TemperatureManager.HumidityMap.Octaves = 2;
+        TemperatureManager.HumidityMap.Period = 256;
     }
 
 
@@ -376,22 +377,24 @@ public class Generator : Node
         var Offset = chunk.Offset;
 
         // Settings !
-        BiomeManager.SetBiomeSettings(chunk.Biome);
+        
 
         bool placedTree = false;
-
 
         for (int z = 0; z < ChunkSize.z; z += 1)
             for (int x = 0; x < ChunkSize.x; x += 1)
             {
+                float temperature = TemperatureManager.GetTemperature(x + (int)(chunk.Offset.x * ChunkSize.x), z + (int)(chunk.Offset.y * ChunkSize.z));
+                float humidity = TemperatureManager.GetHumidity(x + (int)(chunk.Offset.x * ChunkSize.x), z + (int)(chunk.Offset.y * ChunkSize.z));
+                var CurrentSettings = BiomeManager.BestMatch(temperature, humidity);
                 // Global position of the cube.
                 int gX = ((int)Offset.x * (int)Chunk.ChunkSize.x) + x;
                 int gZ = ((int)Offset.y * (int)Chunk.ChunkSize.z) + z;
                 float noiseResult = (Noise.GetNoise2d(gX, gZ) + 1f) * ChunkSize.y;
-                float height = Mathf.Clamp(Mathf.Stepify(noiseResult * BiomeSettings.TerrainAmplitude, 1), 0, 254);
+                float height = Mathf.Clamp(Mathf.Stepify(noiseResult * CurrentSettings.TerrainAmplitude, 1), 0, 254);
 
                 // Default type
-                BlockType type = BiomeSettings.DefaultBlocktype;
+                BlockType type = CurrentSettings.DefaultBlocktype;
 
                 // Filling under the chunk too.
                 for (int i = 0; i <= height; i++)
@@ -400,34 +403,36 @@ public class Generator : Node
                     chunk.Voxels[x, i, z].Type = type;
                 }
 
-                if (BiomeSettings.Mountains)
+                if (CurrentSettings.Mountains)
                     GenerateMountains(chunk, x, z, (int)Mathf.Clamp(height, 0f, 254f));
 
                 // Add 6 layers of grass on top of the generated rock.
                 var pos = chunk.HighestAt(x, z);
-                for (int i = 0; i < BiomeSettings.TopLayerThickness; i++)
+                for (int i = 0; i < CurrentSettings.TopLayerThickness; i++)
                 {
                     // Adding some dirt under top layer.
-                    var newType = BiomeSettings.UnderLayerType;
+                    var newType = CurrentSettings.UnderLayerType;
 
                     // if highest block, its grass!
                     if (i == 0)
-                        newType = BiomeSettings.TopLayerType;
+                        newType = CurrentSettings.TopLayerType;
 
                     // Placing block. Making sure its under 255 height.
                     chunk.Voxels[x, Mathf.Clamp(pos - i, 0, 254), z].Type = newType;
                 }
 
+
+
                 // Placing decoration
                 int decorationChance = rng.RandiRange(1, 100);
-                if (decorationChance < BiomeSettings.DecorationRate)
+                if (decorationChance < CurrentSettings.DecorationRate)
                 {
                     // Placing point
                     int dy = chunk.HighestAt(x, z) + 1;
 
                     // Creating node and mesh.
                     var meshInstance = new MeshInstance();
-                    meshInstance.Mesh = (ArrayMesh)ResourceLoader.Load(BiomeSettings.DecorationModel);
+                    meshInstance.Mesh = (ArrayMesh)ResourceLoader.Load(CurrentSettings.DecorationModel);
 
                     // Adding next frame. Let godot handle lock.
                     CallDeferred("add_child", meshInstance);
@@ -453,7 +458,7 @@ public class Generator : Node
     // TODO: Make BiomeSettings non static for multiple generation pass...
     // TODO: Make Biome interpolation. Best biome match interp.
     // TODO: Place trees into the chunk array.
-    public void GenerateVegetation(Chunk chunk)
+    public void GenerateVegetation(Chunk chunk, BiomeSettings CurrentSettings)
     {
         bool placedTree = false;
         for (int x = 0; x < ChunkSize.x; x++)
@@ -463,9 +468,9 @@ public class Generator : Node
 
                 // Placing trees
                 float treeChance = rng.RandfRange(1f, 100f);
-                if (treeChance < BiomeSettings.TreeRate)
+                if (treeChance < CurrentSettings.TreeRate)
                 {
-                    var file = (ArrayMesh)ResourceLoader.Load(BiomeSettings.TreeModel);
+                    var file = (ArrayMesh)ResourceLoader.Load(CurrentSettings.TreeModel);
                     foreach (var item in file.GetMetaList())
                     {
                         if (item == "voxel_size")
