@@ -8,21 +8,21 @@ namespace ProceduralPlanet.Scripts.Biomes
 {
     class Tundra
     {
-        public static float TargetTemperature { get; } = -10f;
-        public static float TargetHumidity { get; } = 0f;
+        public static float TargetTemperature { get; } = -5f;
+        public static float TargetHumidity { get; } = 25f;
 
         // Terrain
-        public static BlockType DefaultBlocktype = BlockType.snow;
+        public static BlockType DefaultBlocktype = BlockType.rock;
         public static BlockType UnderLayerType { get; set; } = BlockType.snow;
-        public static float TerrainAmplitude { get; set; } = 0.5f;
-        public static BlockType TopLayerType { get; set; } = BlockType.sand;
+        public static float TerrainAmplitude { get; set; } = 1.2f;
+        public static BlockType TopLayerType { get; set; } = BlockType.snow;
         public static int TopLayerThickness { get; set; } = 2;
         public static bool Mountains { get; set; } = false;
 
         // Vegetation
-        public static string TreeModel { get; set; } = "res://models/trees/pine1.tres";
-        public static int TreeRate { get; set; } = 1;
-        public static string DecorationModel { get; set; } = "res://models/decorations/grass.tres";
-        public static int DecorationRate { get; set; } = 0;
+        public static string TreeModel { get; set; } = "res://models/trees/pine_snow1.tres";
+        public static float TreeRate { get; set; } = 1.06f;
+        public static string DecorationModel { get; set; } = "res://models/decorations/puddles1.tres";
+        public static float DecorationRate { get; set; } = 0;
     }
 }

@@ -1,5 +1,6 @@
 using Godot;
 using ProceduralPlanet.Scripts.Biomes;
+using ProceduralPlanet.Scripts.Blocks;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ public class Generator : Node
     private static OpenSimplexNoise Noise2 = new OpenSimplexNoise();
 
     public static OpenSimplexNoise ColorNoise = new OpenSimplexNoise();
-    private static RandomNumberGenerator rng = new RandomNumberGenerator();
+    public static RandomNumberGenerator rng = new RandomNumberGenerator();
 
     private static int camX = 0, camZ = 0;
     private Camera Camera;
@@ -95,7 +96,20 @@ public class Generator : Node
         InfoLabel.Text += "CamPosition: " + "X: " + camX + " Z: " + camZ + "\n";
         InfoLabel.Text += "Current Temperature: " + temp + "\n";
         InfoLabel.Text += "Current Humidity: " + hum + "% \n";
-        InfoLabel.Text += "Current biome: " + BiomeManager.GetBiome(temp, hum).ToString();
+        InfoLabel.Text += "Current biome: " + BiomeManager.FindMatchingBiome(temp, hum).ToString();
+
+        foreach (var item in LoadedChunks.Keys)
+        {
+            if(DistanceToChunk(item) >= RenderDistance * 2)
+            {
+                Chunk chunk = LoadedChunks[item];
+                if (!HasNode("item.ToString()"))
+                    continue;
+                var node = GetNode(item.ToString());
+                node.CallDeferred("free");
+                LoadedChunks.TryRemove(item, out chunk);
+            }
+        }
     }
 
 
@@ -111,9 +125,9 @@ public class Generator : Node
 
         // Noise.Lacunarity = 0.25f;
         Noise.Seed = CurrentSeed;
-        Noise.Octaves = 3;
-        Noise.Period = 720;
-        Noise.Persistence = 0.75f;
+        Noise.Octaves = 2;
+        Noise.Period = 512;
+        Noise.Persistence = 0.8f;
 
         Noise2.Seed = CurrentSeed;
         Noise2.Octaves = 3;
@@ -126,7 +140,7 @@ public class Generator : Node
 
         TemperatureManager.HumidityMap.Seed = CurrentSeed;
         TemperatureManager.HumidityMap.Octaves = 2;
-        TemperatureManager.HumidityMap.Period = 256;
+        TemperatureManager.HumidityMap.Period = 700;
     }
 
 
@@ -172,65 +186,83 @@ public class Generator : Node
 
     private void Render(Chunk pChunk)
     {
-        try
+        
+        // If chunk is already loaded.
+        if (LoadedChunks.ContainsKey(pChunk.Offset))
+            return;
+
+        SurfaceTool = new SurfaceTool();
+        SurfaceTool.Begin(Mesh.PrimitiveType.Triangles);
+
+        // Adding material
+        Material mat = VoxMaterial.Duplicate() as Material;
+        SurfaceTool.SetMaterial(mat);
+
+        // Creating the mesh. Voxel by voxel
+        for (int y = 0; y < Chunk.ChunkSize.y; y++)
+            for (int x = 0; x < Chunk.ChunkSize.x; x++)
+                for (int z = 0; z < Chunk.ChunkSize.z; z++)
+                {
+                    if (!pChunk.Voxels[x, y, z].Active)
+                        continue;
+
+                    CreateVoxel(SurfaceTool, x, y, z, pChunk);
+
+                }
+
+        // Reduces vertex size
+        SurfaceTool.Index();
+
+        // Creating instance
+        MeshInstance chunk = new MeshInstance
         {
-            // If chunk is already loaded.
-            if (LoadedChunks.ContainsKey(pChunk.Offset))
-                return;
+            Mesh = SurfaceTool.Commit(),
+            Name = pChunk.Offset.ToString(),
+            Translation = new Vector3(pChunk.Offset.x * Chunk.ChunkSize.x, 0, pChunk.Offset.y * Chunk.ChunkSize.z)
+        };
 
-            SurfaceTool = new SurfaceTool();
-            SurfaceTool.Begin(Mesh.PrimitiveType.Triangles);
+        // Creating collisions
+        //chunk.CreateTrimeshCollision();
 
-            // Adding material
-            Material mat = VoxMaterial.Duplicate() as Material;
-            SurfaceTool.SetMaterial(mat);
+            
+        // Tagging the chunk
+        chunk.AddToGroup("Chunk");
 
-            // Creating the mesh. Voxel by voxel
-            for (int y = 0; y < Chunk.ChunkSize.y; y++)
-                for (int x = 0; x < Chunk.ChunkSize.x; x++)
-                    for (int z = 0; z < Chunk.ChunkSize.z; z++)
-                    {
-                        if (!pChunk.Voxels[x, y, z].Active)
-                            continue;
+        // Chunk is now loaded. Adding to the scene.
+        LoadedChunks.TryAdd(pChunk.Offset, pChunk);
+        this.CallDeferred("add_child", chunk);
 
-                        CreateVoxel(SurfaceTool, x, y, z, pChunk);
-
-                    }
-
-            // Reduces vertex size
-            SurfaceTool.Index();
-
-            // Creating instance
-            MeshInstance chunk = new MeshInstance
+        if(pChunk.VoxelSprite.Count < 64)
+        {
+            // Adding voxelsprite
+            foreach (VoxelSprite voxSprite in pChunk.VoxelSprite)
             {
-                Mesh = SurfaceTool.Commit(),
-                Name = pChunk.Offset.ToString(),
-                Translation = new Vector3(pChunk.Offset.x * Chunk.ChunkSize.x, 0, pChunk.Offset.y * Chunk.ChunkSize.z)
-            };
+                var meshInstance = new MeshInstance();
+                meshInstance.SetDeferred("mesh", voxSprite.Mesh);
 
-            // Creating collisions
-            // chunk.CreateTrimeshCollision();
+                // Adding next frame to avoid locking problems.
+                chunk.CallDeferred("add_child", meshInstance);
 
-            // Tagging the chunk
-            chunk.AddToGroup("Chunk");
+                // Moving next frame because not in tree yet
+                meshInstance.SetDeferred("translation", voxSprite.Position);
 
-            // Chunk is now loaded. Adding to the scene.
-            LoadedChunks.TryAdd(pChunk.Offset, pChunk);
-            this.CallDeferred("add_child", chunk);
+                // Applying wind shader.
+                meshInstance.SetDeferred("material_override", GrassMaterial);
 
-            // Fade in animation.
-            //var t2 = new Tween();
-            //chunk.AddChild(t2);
-            //t2.InterpolateProperty(mat, "albedo_color", new Color(1, 1, 1, 0f), new Color(1, 1, 1, 1f), 1f, Tween.TransitionType.Linear, Tween.EaseType.InOut);
-            //t2.Start();
-
-            SurfaceTool.Clear();
+                // Scaling down because its a decoration
+                meshInstance.Scale = meshInstance.Scale /= 8;
+            }
         }
-        catch
-        {
-            GD.Print("ERROR IN RENDER.");
-        }
+        
 
+
+        // Fade in animation.
+         //var t2 = new Tween();
+         //chunk.AddChild(t2);
+         //t2.InterpolateProperty(mat, "albedo_color", new Color(1, 1, 1, 0f), new Color(1, 1, 1, 1f), 1f, Tween.TransitionType.Linear, Tween.EaseType.InOut);
+         //t2.Start();
+
+        SurfaceTool.Clear();
     }
 
 
@@ -378,20 +410,25 @@ public class Generator : Node
         var Offset = chunk.Offset;
 
         // Settings !
-        
+        float temperature = TemperatureManager.GetTemperature(0 + (int)(Offset.x * ChunkSize.x), 0 + (int)(Offset.y * ChunkSize.z));
+        float humidity = TemperatureManager.GetHumidity(0 + (int)(Offset.x * ChunkSize.x), 0 + (int)(Offset.y * ChunkSize.z));
+        BiomeSettings CurrentSettings = BiomeManager.BestMatch(temperature, humidity);
 
         bool placedTree = false;
 
         for (int z = 0; z < ChunkSize.z; z += 1)
             for (int x = 0; x < ChunkSize.x; x += 1)
             {
-                float temperature = TemperatureManager.GetTemperature(x + (int)(chunk.Offset.x * ChunkSize.x), z + (int)(chunk.Offset.y * ChunkSize.z));
-                float humidity = TemperatureManager.GetHumidity(x + (int)(chunk.Offset.x * ChunkSize.x), z + (int)(chunk.Offset.y * ChunkSize.z));
-                var CurrentSettings = BiomeManager.BestMatch(temperature, humidity);
+                
+                temperature = TemperatureManager.GetTemperature(x + (int)(chunk.Offset.x * ChunkSize.x), z + (int)(chunk.Offset.y * ChunkSize.z));
+                humidity = TemperatureManager.GetHumidity(x + (int)(chunk.Offset.x * ChunkSize.x), z + (int)(chunk.Offset.y * ChunkSize.z));
+                CurrentSettings = BiomeManager.BestMatch(temperature, humidity);
+                
+                
                 // Global position of the cube.
                 int gX = ((int)Offset.x * (int)Chunk.ChunkSize.x) + x;
                 int gZ = ((int)Offset.y * (int)Chunk.ChunkSize.z) + z;
-                float noiseResult = ((Noise.GetNoise2d(gX, gZ) * CurrentSettings.TerrainAmplitude) + 1f) * ChunkSize.y;
+                float noiseResult = ((Noise.GetNoise2d(gX, gZ) * CurrentSettings.TerrainAmplitude) + 1f) * (ChunkSize.y / 2);
                 float height = Mathf.Clamp(Mathf.Stepify(noiseResult , 1), 0, 254);
 
                 // Default type
@@ -404,10 +441,11 @@ public class Generator : Node
                     chunk.Voxels[x, i, z].Type = type;
                 }
 
+                // Big mountains? 
                 if (CurrentSettings.Mountains)
                     GenerateMountains(chunk, x, z, (int)Mathf.Clamp(height, 0f, 254f));
 
-                // Add 6 layers of grass on top of the generated rock.
+                // Add X layers of block on top of the generated rock.
                 var pos = chunk.HighestAt(x, z);
                 for (int i = 0; i < CurrentSettings.TopLayerThickness; i++)
                 {
@@ -430,34 +468,41 @@ public class Generator : Node
                 {
                     // Placing point
                     int dy = chunk.HighestAt(x, z) + 1;
-
-                    // Creating node and mesh.
-                    var meshInstance = new MeshInstance();
-                    meshInstance.Mesh = (ArrayMesh)ResourceLoader.Load(CurrentSettings.DecorationModel);
-
-                    // Adding next frame. Let godot handle lock.
-                    CallDeferred("add_child", meshInstance);
-
-                    // Moving next frame because not in tree yet
-                    meshInstance.SetDeferred("translation",new Vector3(x + (Offset.x * ChunkSize.x), dy,
-                                                                            z + (Offset.y * ChunkSize.z)));
-
-                    // Applying wind shader.
-                    meshInstance.SetDeferred("material_override", GrassMaterial);
-
-                    // Scaling down because its a decoration
-                    meshInstance.Scale = meshInstance.Scale /= 8;
-                    continue;
+                    var mesh = (ArrayMesh)ResourceLoader.Load(CurrentSettings.DecorationModel);
+                    chunk.AddVoxelSprite(new VoxelSprite(mesh, new Vector3(x, dy, z)));
+                    
                 }
 
-                if (placedTree)
-                    continue;
 
+                
+
+                // Placing trees
+                float treeChance = rng.RandfRange(1f, 100f);
+                //GD.Print(treeChance + " <= " + CurrentSettings.TreeRate);
+                if (treeChance < CurrentSettings.TreeRate)
+                {
+                    //GD.Print("Placed tree");
+                    var file = (ArrayMesh)ResourceLoader.Load(CurrentSettings.TreeModel);
+
+                    int ty = chunk.HighestAt(x, z) + 1;
+
+                    //Placing point.
+
+                    // Creating and setting the mesh.
+                    var meshInstance = new MeshInstance();
+                    meshInstance.Mesh = file;
+                    meshInstance.Name = CurrentSettings.TreeModel;
+                    // Adding it next frame.(safe with mutex lock)
+                    CallDeferred("add_child", meshInstance);
+                    // Moving it next frame(not in the tree yet :))
+                    meshInstance.SetDeferred("translation", new Vector3(x + (Offset.x * ChunkSize.x) - 10, ty,
+                                                                            z + (Offset.y * ChunkSize.z + 10)));
+                    //meshInstance.SetDeferred("rotation_degrees", new Vector3(0, rng.RandfRange(0, 360), 0));
+                }
+                    
             }
     }
     
-    // TODO: Make BiomeSettings non static for multiple generation pass...
-    // TODO: Make Biome interpolation. Best biome match interp.
     // TODO: Place trees into the chunk array.
     public void GenerateVegetation(Chunk chunk, BiomeSettings CurrentSettings)
     {
@@ -491,7 +536,6 @@ public class Generator : Node
                             (voxelPosition.z < 0 || voxelPosition.z >= 16))
 
                             continue;
-                        GD.Print(voxelPosition);
                         chunk.Voxels[(int)voxelPosition.x, (int)voxelPosition.y, (int)voxelPosition.z].Active = true;
                     }
                     //// Placing point.

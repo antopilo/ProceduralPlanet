@@ -25,6 +25,7 @@
 
  */
 
+using Godot;
 using ProceduralPlanet.Scripts.Biomes;
 using System;
 using System.Collections.Generic;
@@ -32,7 +33,7 @@ using System.Linq;
 
 public class BiomeManager
 {
-    public static float BiomeAcceptanceThreshold = 0.2f;
+    public static float BiomeAcceptanceThreshold = 0.7f;
 
     public static Biomes GetBiome(float temperature, float humidity)
     {
@@ -74,7 +75,8 @@ public class BiomeManager
         switch (biome)
         {
             case Biomes.Tundra:
-
+                newBiomeSettings.TargetHumidity = Tundra.TargetHumidity;
+                newBiomeSettings.TargetTemperature = Tundra.TargetTemperature;
                 newBiomeSettings.DefaultBlocktype = Tundra.DefaultBlocktype;
                 newBiomeSettings.TopLayerType = Tundra.TopLayerType;
                 newBiomeSettings.UnderLayerType = Tundra.UnderLayerType;
@@ -87,6 +89,8 @@ public class BiomeManager
                 newBiomeSettings.DecorationRate = Tundra.DecorationRate;
                 break;
             case Biomes.BorealForest:
+                newBiomeSettings.TargetHumidity = BorealForest.TargetHumidity;
+                newBiomeSettings.TargetTemperature = BorealForest.TargetTemperature;
                 newBiomeSettings.DefaultBlocktype = BorealForest.DefaultBlocktype;
                 newBiomeSettings.TopLayerType = BorealForest.TopLayerType;
                 newBiomeSettings.UnderLayerType = BorealForest.UnderLayerType;
@@ -99,6 +103,8 @@ public class BiomeManager
                 newBiomeSettings.DecorationRate = BorealForest.DecorationRate;
                 break;
             case Biomes.Woodlands:
+                newBiomeSettings.TargetHumidity = Woodlands.TargetHumidity;
+                newBiomeSettings.TargetTemperature = Woodlands.TargetTemperature;
                 newBiomeSettings.DefaultBlocktype = Woodlands.DefaultBlocktype;
                 newBiomeSettings.TopLayerType = Woodlands.TopLayerType;
                 newBiomeSettings.UnderLayerType = Woodlands.UnderLayerType;
@@ -111,6 +117,8 @@ public class BiomeManager
                 newBiomeSettings.DecorationRate = Woodlands.DecorationRate;
                 break;
             case Biomes.ColdDesert:
+                newBiomeSettings.TargetHumidity = ColdDesert.TargetHumidity;
+                newBiomeSettings.TargetTemperature = ColdDesert.TargetTemperature;
                 newBiomeSettings.DefaultBlocktype = ColdDesert.DefaultBlocktype;
                 newBiomeSettings.TopLayerType = ColdDesert.TopLayerType;
                 newBiomeSettings.UnderLayerType = ColdDesert.UnderLayerType;
@@ -123,6 +131,8 @@ public class BiomeManager
                 newBiomeSettings.DecorationRate = ColdDesert.DecorationRate;
                 break;
             case Biomes.Desert:
+                newBiomeSettings.TargetHumidity = Desert.TargetHumidity;
+                newBiomeSettings.TargetTemperature = Desert.TargetTemperature;
                 newBiomeSettings.DefaultBlocktype = Desert.DefaultBlocktype;
                 newBiomeSettings.TopLayerType = Desert.TopLayerType;
                 newBiomeSettings.UnderLayerType = Desert.UnderLayerType;
@@ -135,6 +145,8 @@ public class BiomeManager
                 newBiomeSettings.DecorationRate = Desert.DecorationRate;
                 break;
             case Biomes.Savanna:
+                newBiomeSettings.TargetHumidity = Savanna.TargetHumidity;
+                newBiomeSettings.TargetTemperature = Savanna.TargetTemperature;
                 newBiomeSettings.DefaultBlocktype = Savanna.DefaultBlocktype;
                 newBiomeSettings.TopLayerType = Savanna.TopLayerType;
                 newBiomeSettings.UnderLayerType = Savanna.UnderLayerType;
@@ -147,6 +159,8 @@ public class BiomeManager
                 newBiomeSettings.DecorationRate = Savanna.DecorationRate;
                 break;
             case Biomes.RainForest:
+                newBiomeSettings.TargetHumidity = RainForest.TargetHumidity;
+                newBiomeSettings.TargetTemperature = RainForest.TargetTemperature;
                 newBiomeSettings.DefaultBlocktype = RainForest.DefaultBlocktype;
                 newBiomeSettings.TopLayerType = RainForest.TopLayerType;
                 newBiomeSettings.UnderLayerType = RainForest.UnderLayerType;
@@ -159,6 +173,8 @@ public class BiomeManager
                 newBiomeSettings.DecorationRate = RainForest.DecorationRate;
                 break;
             case Biomes.TropicRainForest:
+                newBiomeSettings.TargetHumidity = TropicRainForest.TargetHumidity;
+                newBiomeSettings.TargetTemperature = TropicRainForest.TargetTemperature;
                 newBiomeSettings.DefaultBlocktype = TropicRainForest.DefaultBlocktype;
                 newBiomeSettings.TopLayerType = TropicRainForest.TopLayerType;
                 newBiomeSettings.UnderLayerType = TropicRainForest.UnderLayerType;
@@ -171,6 +187,8 @@ public class BiomeManager
                 newBiomeSettings.DecorationRate = TropicRainForest.DecorationRate;
                 break;
             case Biomes.Forest:
+                newBiomeSettings.TargetHumidity = Forest.TargetHumidity;
+                newBiomeSettings.TargetTemperature = Forest.TargetTemperature;
                 newBiomeSettings.DefaultBlocktype = Forest.DefaultBlocktype;
                 newBiomeSettings.TopLayerType = Forest.TopLayerType;
                 newBiomeSettings.UnderLayerType = Forest.UnderLayerType;
@@ -188,36 +206,96 @@ public class BiomeManager
 
     }
 
-    public static BiomeSettings BestMatch(float temp, float humidity)
+    public static Biomes FindMatchingBiome(float temp, float humidity)
     {
-        // Calculate match for each biome.
+        string message = "Current temp: " + temp + " hum: " + humidity;
         float[] results = new float[Enum.GetValues(typeof(Biomes)).Length];
         for (int i = 0; i < results.Length; i++)
         {
             results[i] = GetMatch(temp, humidity, GetBiomeSettings((Biomes)i));
+            message += ((Biomes)i).ToString() + ": " + results[i] + "% \n";
         }
+
 
         // Pick top 2
         int bestMatch = 0, secondMatch = 0;
+        float bestValue = 0f, secondValue = 0f;
         for (int i = 0; i < results.Length; i++)
         {
-            if (results[i] > bestMatch)
+            if (results[i] > bestValue)
             {
-                bestMatch = i;
                 secondMatch = bestMatch;
+                secondValue = results[bestMatch];
+
+                bestMatch = i;
+                bestValue = results[i];
             }
 
-            if (results[i] > secondMatch && results[i] != bestMatch)
+            if (results[i] > secondValue && results[i] != bestValue)
+            {
                 secondMatch = i;
+                secondValue = results[secondMatch];
+            }
         }
 
+        return (Biomes)bestMatch;
+    }
+
+
+    public static BiomeSettings BestMatch(float temp, float humidity)
+    {
+        // Calculate match for each biome.
+        string message = "Current temp: " + temp + " hum: " + humidity;
+        float[] results = new float[Enum.GetValues(typeof(Biomes)).Length];
+        for (int i = 0; i < results.Length; i++)
+        {
+            results[i] = GetMatch(temp, humidity, GetBiomeSettings((Biomes)i));
+            message += ((Biomes)i).ToString() + ": " + results[i] + "% \n";
+        }
+ 
+        
+        // Pick top 2
+        int bestMatch = 0, secondMatch = 0;
+        float bestValue = 0f, secondValue = 0f;
+        for (int i = 0; i < results.Length; i++)
+        {
+            if (results[i] > bestValue)
+            {
+                secondMatch = bestMatch;
+                secondValue = results[bestMatch];
+
+                bestMatch = i;
+                bestValue = results[i];
+            }
+
+            if (results[i] > secondValue && results[i] != bestValue)
+            {
+                secondMatch = i;
+                secondValue = results[secondMatch];
+            }
+        }
+
+
+        //GD.Print("Best is " + (Biomes)bestMatch + " with: " + bestValue);
+        //GD.Print("2nd is " + (Biomes)secondMatch + " with: " + secondValue);
         var BestSetting = GetBiomeSettings((Biomes)bestMatch);
         var SecondSetting = GetBiomeSettings((Biomes)secondMatch);
 
-        if (results[bestMatch] >= BiomeAcceptanceThreshold)
-            return GetBiomeSettings((Biomes)bestMatch);
-        else
-            return InterpolateBiome(BestSetting, results[bestMatch], SecondSetting, results[secondMatch]);
+
+        float strengh = 1 - (BiomeAcceptanceThreshold - bestValue);
+        return InterpolateBiome(BestSetting, strengh, SecondSetting, 1 - strengh);
+
+
+
+        //if (bestValue > BiomeAcceptanceThreshold)
+        //{
+        //    return BestSetting;
+        //}
+        //else
+        //{
+        //    return InterpolateBiome(BestSetting, bestValue, SecondSetting, secondValue);
+        //}
+
     }
 
     private static BiomeSettings InterpolateBiome(BiomeSettings BestSetting, float best, BiomeSettings SecondSetting, float second)
@@ -230,8 +308,8 @@ public class BiomeManager
 
         // TODO: Make decoration rate a float.
         newSetting.DecorationRate = (int)(BestSetting.DecorationRate * best + SecondSetting.DecorationRate * second);
-        
-        if(best > second)
+
+        if(best < second )
         {
             newSetting.DefaultBlocktype = BestSetting.DefaultBlocktype;
             newSetting.TopLayerType = BestSetting.TopLayerType;
@@ -256,14 +334,18 @@ public class BiomeManager
     private static float GetMatch(float temp, float humidity, BiomeSettings biome)
     {
         float realTemp, realHum, realTargetTemp, realTargetHum;
+
         float targetTemp = biome.TargetTemperature;
         float targetHum = biome.TargetHumidity;
 
-        realTemp = (TemperatureManager.GetOriginalTemperature(temp) + 1f) / 2f;
-        realTargetTemp = (TemperatureManager.GetOriginalTemperature(targetTemp) + 1f) / 2f;
+        realTemp = (TemperatureManager.GetOriginalTemperature(temp) - 1f) / 2;
         realHum = humidity / 100f;
+
+        realTargetTemp = (TemperatureManager.GetOriginalTemperature(targetTemp) - 1f) / 2;
         realTargetHum = targetHum / 100f;
- 
-        return 1 - ((realTemp - realTargetTemp) + (realHum - realTargetHum)); ;
+
+        float diffTemp = realTemp > realTargetTemp ? realTargetTemp - realTemp : realTemp - realTargetTemp;
+        float diffHum = realHum > realTargetHum ? realTargetHum - realHum : realHum - realTargetHum;
+        return 1f + (diffTemp + diffHum);
     }
 }

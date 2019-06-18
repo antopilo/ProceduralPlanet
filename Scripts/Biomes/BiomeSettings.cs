@@ -23,7 +23,7 @@ public class BiomeSettings
     public float TreeRate { get; set; }
 
     public string DecorationModel { get; set; } 
-    public int DecorationRate { get; set; }
+    public float DecorationRate { get; set; }
 
     public BiomeSettings()
     {

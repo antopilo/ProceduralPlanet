@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=2]
 
-[ext_resource path="res://Scripts/Generator.cs" type="Script" id=1]
-[ext_resource path="res://assets/maujoe.camera_control/scripts/camera_control.gd" type="Script" id=2]
+[ext_resource path="res://assets/maujoe.camera_control/scripts/camera_control.gd" type="Script" id=1]
+[ext_resource path="res://Scripts/Generator.cs" type="Script" id=2]
 [ext_resource path="res://FORCED SQUARE.ttf" type="DynamicFontData" id=3]
 
 [sub_resource type="DynamicFont" id=1]
@@ -10,6 +10,15 @@ font_data = ExtResource( 3 )
 
 [node name="Root" type="Spatial"]
 
+[node name="Camera" type="Camera" parent="."]
+transform = Transform( 1, 0, 0, 0, 0.106413, 0.994322, 0, -0.994322, 0.106413, 0, 255, 0 )
+far = 8192.0
+script = ExtResource( 1 )
+smoothness = 0.139
+distance = 0.0
+acceleration = 0.522
+max_speed = Vector3( 40, 40, 40 )
+
 [node name="Sun" type="DirectionalLight" parent="."]
 transform = Transform( 0.0672027, 0.670175, -0.739154, -0.715857, 0.548433, 0.432168, 0.695005, 0.500086, 0.516606, 0, 0, 0 )
 light_color = Color( 1, 1, 0.894118, 1 )
@@ -17,19 +26,11 @@ light_energy = 0.75
 light_indirect_energy = 0.0
 light_specular = 0.37
 light_bake_mode = 2
+shadow_enabled = true
 directional_shadow_depth_range = 1
 
 [node name="Generator" type="Node" parent="."]
-script = ExtResource( 1 )
-
-[node name="Camera" type="Camera" parent="."]
-transform = Transform( 1, 0, 0, 0, 0.106413, 0.994322, 0, -0.994322, 0.106413, 0, 255, 0 )
-far = 8192.0
 script = ExtResource( 2 )
-smoothness = 0.745
-collisions = false
-acceleration = 0.522
-max_speed = Vector3( 40, 40, 40 )
 
 [node name="info" type="RichTextLabel" parent="."]
 margin_left = 5.0

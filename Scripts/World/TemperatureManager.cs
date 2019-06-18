@@ -16,6 +16,7 @@ public static class TemperatureManager
         return (((actual + 1f) / 2f) * 40f) - 10;
     }
 
+    // Get the humidity from global coordinates.
     public static float GetHumidity(int x, int z)
     {
         // Range -1 to 1
@@ -25,6 +26,7 @@ public static class TemperatureManager
         return ((actual + 1f) / 2f) * 100f;
     }
 
+    // Convert temperature ranging from [-10, 30] to [-1, 1]
     public static float GetOriginalTemperature(float temp)
     {
         return (((temp + 10) / 40f) * 2f) + 1f;
