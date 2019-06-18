@@ -8,14 +8,14 @@ namespace ProceduralPlanet.Scripts.Biomes
 {
     class BorealForest : Biome
     {
-        public static float TargetTemperature { get; } = 2f;
-        public static float TargetHumidity { get; } = 2f;
+        public static float TargetTemperature { get; } = 5f;
+        public static float TargetHumidity { get; } = 75f;
 
         // Terrain
-        public static BlockType DefaultBlocktype = BlockType.grass;
+        public static BlockType DefaultBlocktype = BlockType.rock;
         public static BlockType UnderLayerType { get; set; } = BlockType.dirt;
         public static float TerrainAmplitude { get; set; } = 0.5f;
-        public static BlockType TopLayerType { get; set; } = BlockType.grass;
+        public static BlockType TopLayerType { get; set; } = BlockType.dirt;
         public static int TopLayerThickness { get; set; } = 2;
         public static bool Mountains { get; set; } = false;
 

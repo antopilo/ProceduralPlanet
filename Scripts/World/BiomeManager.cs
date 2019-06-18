@@ -32,7 +32,7 @@ using System.Linq;
 
 public class BiomeManager
 {
-    public static float BiomeAcceptanceThreshold = 0.5f;
+    public static float BiomeAcceptanceThreshold = 0.2f;
 
     public static Biomes GetBiome(float temperature, float humidity)
     {

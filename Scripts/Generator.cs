@@ -342,6 +342,10 @@ public class Generator : Node
         {
             case BlockType.grass: // Grass
                 resultColor = new Color("2bc117");
+                if (temp > 0)
+                    resultColor = resultColor.LinearInterpolate(new Color(1, 1, 0), temp);
+                else
+                    resultColor = resultColor.LinearInterpolate(new Color(1, 1, 1), Mathf.Abs(temp));
                 break;
             case BlockType.rock: // Rock
                 resultColor = new Color("555b5b");
@@ -362,10 +366,7 @@ public class Generator : Node
                 resultColor = new Color("76552b");
                 break;
         }
-        if (temp > 0)
-            resultColor = resultColor.LinearInterpolate(new Color(1, 1, 0), temp);
-        else
-            resultColor = resultColor.LinearInterpolate(new Color(1, 1, 1), Mathf.Abs(temp));
+        
 
 
         return resultColor;
@@ -390,8 +391,8 @@ public class Generator : Node
                 // Global position of the cube.
                 int gX = ((int)Offset.x * (int)Chunk.ChunkSize.x) + x;
                 int gZ = ((int)Offset.y * (int)Chunk.ChunkSize.z) + z;
-                float noiseResult = (Noise.GetNoise2d(gX, gZ) + 1f) * ChunkSize.y;
-                float height = Mathf.Clamp(Mathf.Stepify(noiseResult * CurrentSettings.TerrainAmplitude, 1), 0, 254);
+                float noiseResult = ((Noise.GetNoise2d(gX, gZ) * CurrentSettings.TerrainAmplitude) + 1f) * ChunkSize.y;
+                float height = Mathf.Clamp(Mathf.Stepify(noiseResult , 1), 0, 254);
 
                 // Default type
                 BlockType type = CurrentSettings.DefaultBlocktype;
